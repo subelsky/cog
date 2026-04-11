@@ -24,7 +24,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     jq \
     ripgrep \
     fd-find \
+    dnsmasq \
     iptables \
+    ipset \
     iputils-ping \
     netcat-openbsd \
     sudo \
@@ -51,7 +53,8 @@ RUN groupadd -g ${HOST_GID} ${USERNAME} 2>/dev/null || true \
     && useradd -m -u ${HOST_UID} -g ${HOST_GID} -s /bin/zsh ${USERNAME}
 
 # Allow claude to run iptables via sudo (no password)
-RUN echo "${USERNAME} ALL=(root) NOPASSWD: /usr/sbin/iptables" > /etc/sudoers.d/${USERNAME} \
+RUN echo "${USERNAME} ALL=(root) NOPASSWD: /usr/sbin/iptables, /usr/sbin/ipset, /usr/sbin/dnsmasq, /usr/bin/tee /etc/resolv.conf" \
+    > /etc/sudoers.d/${USERNAME} \
     && chmod 0440 /etc/sudoers.d/${USERNAME}
 
 # Directories for mounts
