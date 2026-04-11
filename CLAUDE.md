@@ -273,3 +273,16 @@ Cog includes pipeline skills that maintain memory health. Run them manually or s
 | `/foresight` | Cross-domain strategic nudge | Daily (morning) |
 
 These are optional — Cog works without them. But running them regularly keeps memory clean and surfaces insights you'd miss.
+
+### Cog Reference Docs
+
+Upstream design docs from the Cog project live in `docs/cog/`. Consult these for deeper context on architecture decisions and pipeline skill design:
+
+- `docs/cog/architecture.md` — system structure and design principles
+- `docs/cog/memory.md` — memory tier design, retrieval protocol details
+- `docs/cog/pipeline.md` — pipeline overview and maintenance philosophy
+- `docs/cog/pipeline/reflect.md` — `/reflect` skill design
+- `docs/cog/pipeline/housekeeping.md` — `/housekeeping` skill design
+- `docs/cog/pipeline/evolve.md` — `/evolve` skill design
+- `docs/cog/pipeline/foresight.md` — `/foresight` skill design
+- `docs/cog/pipeline/scenarios.md` — `/scenario` skill design
