@@ -178,7 +178,27 @@ Regenerate `INDEX.md` for each domain directory. These files power the memory ro
 - Domain summary: use the `label` from `memory/domains.yml` for the matching domain
 - If a file has no L0, list it as just `**{filename}**` (no summary)
 
-## 10. Compose Debrief
+## 10. Esper Coordination
+
+If `esper/index.md` exists, perform these additional checks:
+
+**Cross-system link check:**
+- Grep all Cog observation files for topic names that exist in Esper's index
+- If a Cog observation references a topic with 3+ mentions but no `[[esper/topics/...]]` link, flag it
+- Suggest adding wiki-links from Cog observations to relevant Esper topic pages
+
+**Esper link health:**
+- Verify all `[[esper/...]]` links in Cog files point to files that exist
+- Verify all `[[personal/...]]` or `[[work/...]]` links in Esper files point to files that exist
+- Report broken links
+
+**Esper in briefing bridge:**
+- When writing `cog-meta/briefing-bridge.md` (step 7), include a section noting:
+  - Number of Esper source pages and topic pages
+  - Most recently updated topics
+  - Any lint issues found (if available from recent `esper/log.md` entries)
+
+## 11. Compose Debrief
 
 Summarize everything done:
 - What was archived/pruned
