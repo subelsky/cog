@@ -6,9 +6,51 @@ domains:
   - id: personal
     path: personal
     type: personal
-    label: "Family, health, calendar, day-to-day"
-    triggers: [family, health, kids, calendar, personal, home, car, finance]
-    files: [hot-memory, action-items, entities, observations, habits, health, calendar]
+    label: "Family, health, hobbies, home — Roland Park, Baltimore"
+    triggers: [family, health, kids, teenagers, calendar, personal, home, car, finance, weightlifting, RPGs, reading, meditation, bipolar, longevity, healthspan, office, Roland Park, Baltimore]
+    files: [hot-memory, action-items, entities, observations, habits, health, calendar, home, philosophy]
+
+  - id: trayverify
+    path: work/trayverify
+    type: work
+    label: "Founding CTO — AI food verification for healthcare kitchens"
+    triggers: [trayverify, tray verify, food verification, healthcare kitchen, YOLO, Hailo, Raspberry Pi, computer vision, AI HAT, Next.js, CTO]
+    files: [hot-memory, action-items, entities, projects, dev-log, observations]
+
+  - id: mthr
+    path: work/mthr
+    type: side-project
+    label: "Immersive interactive experience for Museum of the UN (OdysseyWorks certificate)"
+    triggers: [mthr, mother, Museum of the UN, OdysseyWorks, Odyssey Works, experience design, certificate program, immersive experience, nature connection]
+    files: [hot-memory, action-items, projects, dev-log, observations]
+
+  - id: storyfield
+    path: work/storyfield
+    type: side-project
+    label: "Live generative mural installation — Experience Week 2026 London"
+    triggers: [storyfield, story field, generative mural, info-beamer, ultra-short-throw, projector, Experience Week, London 2026, mural installation]
+    files: [hot-memory, action-items, projects, dev-log, observations]
+
+  - id: podcast
+    path: work/podcast
+    type: side-project
+    label: "Creative Technology Field Notes — art × technology interviews"
+    triggers: [podcast, Creative Technology Field Notes, CTFN, field notes, interview, episode, guest, art and technology]
+    files: [hot-memory, action-items, projects, observations]
+
+  - id: visibility
+    path: work/visibility
+    type: side-project
+    label: "Visibility creator career strategy — networking, portfolio, collaborators"
+    triggers: [visibility, career, networking, portfolio, collaborators, experience design community, immersive art, creative tech career, positioning]
+    files: [hot-memory, action-items, entities, observations]
+
+  - id: website
+    path: work/website
+    type: side-project
+    label: "Personal website design and portfolio"
+    triggers: [website, portfolio site, web design, personal site, homepage]
+    files: [hot-memory, action-items, observations]
 
   - id: cog-meta
     path: cog-meta
@@ -16,5 +58,3 @@ domains:
     label: "Cog self-knowledge, pipeline health, architecture"
     triggers: [cog, meta, evolve, pipeline, memory system, architecture]
     files: [self-observations, patterns, improvements, scenario-calibration, foresight-nudge]
-
-  # Run /setup to add more domains conversationally.
