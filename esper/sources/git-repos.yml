@@ -1,0 +1,9 @@
+name: Code History
+type: git
+repos: []
+cursor:
+  last_commit_per_repo: {}
+notes: |
+  Add repos as needed. Each entry:
+    - path: /sources/repos/project-name
+      include: ["README.md", "docs/**"]

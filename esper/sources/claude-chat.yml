@@ -1,0 +1,11 @@
+name: Claude Chat Transcripts
+type: api
+api: claude-conversations
+format: conversation-json
+cursor:
+  last_sync: null
+  last_conversation_id: null
+notes: |
+  Primary: Anthropic conversations API (if available).
+  Fallback: periodic JSON export dropped into raw/claude-chat/.
+  Each conversation becomes one source page.

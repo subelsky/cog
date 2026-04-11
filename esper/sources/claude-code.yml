@@ -1,0 +1,11 @@
+name: Claude Code Transcripts
+type: filesystem
+mount: /sources/claude-code
+format: jsonl
+cursor:
+  last_processed: null
+  files_processed: []
+notes: |
+  JSONL session files copied from other devcontainers.
+  Same format as ~/.claude/projects/ session files.
+  Each session becomes one source page.

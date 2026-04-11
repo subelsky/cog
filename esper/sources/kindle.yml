@@ -1,0 +1,7 @@
+name: Kindle Highlights
+type: filesystem
+mount: /sources/kindle
+format: clippings
+cursor:
+  last_processed: null
+  files_processed: []

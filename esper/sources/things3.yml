@@ -1,0 +1,5 @@
+name: Things 3
+type: mcp
+server: things3
+cursor:
+  last_sync: null
