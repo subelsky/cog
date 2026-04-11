@@ -20,6 +20,8 @@ Read broadly — this is a scan, not a focused lookup:
    - `memory/personal/calendar.md` (what's coming up)
    - `memory/personal/health.md` (health trajectory)
    - `memory/cog-meta/briefing-bridge.md` (housekeeping findings)
+   - `esper/index.md` (Esper topic catalog — what has been read/learned)
+   - Recent entries in `esper/log.md` (what was recently ingested)
    - Recent observations across all domains (last 7 days)
    - Thread current-state sections — what narratives are actively unfolding?
 
@@ -28,6 +30,12 @@ Read broadly — this is a scan, not a focused lookup:
 ### 1. Cross-Domain Convergence Scan
 
 Look for topics, people, or themes appearing in 2+ domains simultaneously. These are convergence points — where effort in one area compounds into another.
+
+**Esper convergence:**
+- Check if any Esper topics directly relate to active Cog action items or project goals
+- Look for patterns: "You've been reading about X (Esper) while working on Y (Cog) — there may be a connection"
+- Surface Esper topics that have grown recently (many new sources) as potential areas of emerging interest
+- Note if Esper topics contradict or complicate Cog assumptions
 
 ### 2. Velocity & Stall Detection
 
