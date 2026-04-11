@@ -156,6 +156,18 @@ For each scenario where today >= `check-by` date:
 4. If still active but assumptions changed: add a dated note
 5. If overdue: flag in debrief
 
+### 3f. Esper Cross-Reference
+
+If `esper/index.md` exists, check for connections between session content and Esper:
+
+**Session-to-Esper mapping:**
+- When mining session transcripts (step 1), note topics discussed extensively
+- Check if those topics exist as Esper topic pages
+- If a session discussed a topic at length but Esper has no page for it, note in self-observations: "Session discussed {topic} extensively — Esper has no topic page. Consider adding sources."
+
+**Source suggestions:**
+- If a session referenced external content (articles, books, talks) that aren't in Esper, note: "Session referenced {source} — not yet in Esper. Suggest ingesting."
+
 ### 4. Assess Performance
 
 Honestly evaluate:
