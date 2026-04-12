@@ -15,5 +15,8 @@
       "Bash(mkdir*)",
       "Bash(ls*)"
     ]
+  },
+  "enabledPlugins": {
+    "github@claude-plugins-official": true
   }
 }

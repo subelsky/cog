@@ -24,7 +24,9 @@
       "Bash(gh api graphql -f 'query=:*)",
       "WebFetch(domain:readwise.io)",
       "mcp__things__show_item",
-      "mcp__things__get_projects"
+      "mcp__things__get_projects",
+      "Bash(grep:*)",
+      "mcp__things__search_todos"
     ]
   }
 }
