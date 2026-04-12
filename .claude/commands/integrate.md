@@ -160,9 +160,7 @@ Summarize what happened:
 
 **JSONL (Claude Code transcripts):** Each line is a JSON object. User messages have `type: "user"` — when `message.content` is a string, it's user input. When it's an array, it's tool results (skip for summary, but note tools used). Assistant text is in `type: "assistant"` messages. Summarize the session's goals, decisions made, code written, and outcomes.
 
-**Clippings (Kindle):** `My Clippings.txt` uses `==========` as delimiter between highlights. Each highlight has a book title line, location/date line, blank line, then highlight text. Group by book title — each book is one source page.
-
-**Markdown (Instapaper):** Already structured. Extract title from first `# ` heading or filename. Summarize key arguments and notable passages.
+**Readwise-markdown:** Readwise export with `Articles/` and `Books/` subdirectories. Each `.md` file is one source unit. Format: `# Title`, then `### Metadata` block (Author, Full Title, Category `#articles` or `#books`, optional URL, optional Document Tags like `#Liked`), then `### Highlights` with bulleted highlight text. Articles include Instapaper or Readwise view-highlight links; books include Kindle location links. Some highlights have `**Tags:** #favorite` or similar inline tags — preserve these as signal for importance. Each file = one source page. Use the `# Title` as the source page title and Author from metadata.
 
 **EML (Email):** Parse headers for From, To, Subject, Date. Group by thread (Subject line). Summarize the thread's key points, decisions, and action items.
 

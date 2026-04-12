@@ -1,7 +1,0 @@
-name: Instapaper Articles
-type: filesystem
-mount: /sources/instapaper
-format: markdown
-cursor:
-  last_processed: null
-  files_processed: []
