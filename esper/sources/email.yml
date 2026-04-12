@@ -1,7 +1,0 @@
-name: Saved Emails
-type: filesystem
-mount: /sources/email
-format: eml
-cursor:
-  last_processed: null
-  files_processed: []

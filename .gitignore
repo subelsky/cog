@@ -13,8 +13,9 @@ Thumbs.db
 .env
 .env.*
 
-# Runtime logs
-memory/cog-meta/access-log.tsv
+# Data (version-controlled in their own local repos)
+memory/
+esper/
 
 # Node (if any tooling is added later)
 node_modules/
