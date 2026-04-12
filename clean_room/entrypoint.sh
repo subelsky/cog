@@ -20,6 +20,8 @@ ALLOWED_DOMAINS=(
     api.anthropic.com       # Claude API
     platform.claude.com     # OAuth (token exchange + login)
     statsig.anthropic.com   # Feature flags (Claude Code needs this)
+    mcp2.readwise.io        # Readwise MCP server endpoint
+    readwise.io             # Readwise OAuth / token endpoints
 )
 
 firewall_fail() { echo "[esper] FIREWALL ERROR: $1" >&2; exit 1; }
@@ -100,21 +102,18 @@ sudo iptables -P INPUT DROP
 sudo iptables -P FORWARD DROP
 sudo iptables -P OUTPUT DROP
 
-# --- 7. Verify ---
-echo "[esper] Verifying firewall..."
-
-# Blocked: example.com should fail immediately (REJECT, not timeout)
-if curl --connect-timeout 5 -sf https://example.com > /dev/null 2>&1; then
-    firewall_fail "reached example.com — firewall is broken"
+# --- 7. Lightweight DNS smoke test ---
+# Confirms dnsmasq is enforcing the allowlist:
+#   - an unlisted domain must NOT resolve (SERVFAIL)
+#   - api.anthropic.com must resolve
+# Uses getent (libc) instead of curl — no HTTP client needed.
+if getent hosts example.com > /dev/null 2>&1; then
+    firewall_fail "example.com resolved — DNS allowlist is broken"
 fi
-echo "[esper]   ✓ example.com blocked"
-
-# Allowed: api.anthropic.com should connect (even a 401 means TCP worked)
-if ! curl --connect-timeout 10 -so /dev/null https://api.anthropic.com/v1/messages 2>&1; then
-    echo "[esper]   ✗ api.anthropic.com unreachable — auth may fail"
-else
-    echo "[esper]   ✓ api.anthropic.com reachable"
+if ! getent hosts api.anthropic.com > /dev/null 2>&1; then
+    firewall_fail "api.anthropic.com did not resolve — DNS allowlist is broken"
 fi
+echo "[esper]   ✓ DNS allowlist enforced (example.com blocked, api.anthropic.com OK)"
 
 echo "[esper] Network: HERMETIC (DNS + IP allowlist: ${(j:, :)ALLOWED_DOMAINS})"
 

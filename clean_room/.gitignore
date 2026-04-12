@@ -5,6 +5,10 @@
 # Claude Code local config
 .claude/
 
+# Isolated container state — ephemeral, never committed
+claude-home/
+npm-cache/
+
 # Build artifact (copied from ~/.gitconfig during image build)
 .gitconfig-host
 

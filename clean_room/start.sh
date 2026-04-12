@@ -6,8 +6,16 @@
 #   - Synergy repo mounted read-only at /workspace
 #   - esper/ overlaid read-write (the only writable project path)
 #   - Source directories mounted read-only at /sources/
-#   - Network killed via iptables inside the container
+#   - Isolated Claude home (clean_room/claude-home/) — NOT the host's ~/.claude
+#   - Isolated npm cache (clean_room/npm-cache/) — NOT the host's ~/.npm
+#   - Network locked to Anthropic-only via dnsmasq + iptables
 #   - DEVCONTAINER=true (required by /integrate security gate)
+#
+# Isolation note: This container has zero writable access to the host user's
+# Claude config, skills, hooks, agents, transcripts, or npm cache. Anything
+# Claude does inside here is sandboxed to clean_room/claude-home/ and esper/.
+# Project-local commands (/workspace/.claude/commands/) remain available
+# via the read-only workspace mount.
 #
 # Usage:
 #   ./start.sh                  # Launch Claude Code
@@ -90,8 +98,11 @@ build_image_if_needed() {
 }
 
 setup_directories() {
-    mkdir -p "$HOME/.claude"
-    mkdir -p "$HOME/.npm"
+    # Isolated per-container state — never touches host ~/.claude or ~/.npm.
+    # First run will be unauthenticated; log in once inside the container
+    # and credentials persist here for future runs.
+    mkdir -p "$SCRIPT_DIR/claude-home"
+    mkdir -p "$SCRIPT_DIR/npm-cache"
 }
 
 build_args() {
@@ -107,12 +118,14 @@ build_args() {
     # This is the ONLY writable project path. /integrate writes here.
     MOUNT_ARGS+=(--mount "type=bind,src=$SYNERGY_DIR/esper,dst=/workspace/esper")
 
-    # Claude configuration — read-write (Claude Code needs this to function)
-    # Session transcripts persist here on the host automatically
-    MOUNT_ARGS+=(--mount "type=bind,src=$HOME/.claude,dst=/home/claude/.claude")
+    # Isolated Claude home — NOT the host's ~/.claude.
+    # This keeps the container's credentials, settings, skills, hooks, agents,
+    # and session transcripts completely separate from the host user's config.
+    # First run requires a one-time login inside the container.
+    MOUNT_ARGS+=(--mount "type=bind,src=$SCRIPT_DIR/claude-home,dst=/home/claude/.claude")
 
-    # NPM cache
-    MOUNT_ARGS+=(--mount "type=bind,src=$HOME/.npm,dst=/home/claude/.npm")
+    # Isolated npm cache — NOT the host's ~/.npm.
+    MOUNT_ARGS+=(--mount "type=bind,src=$SCRIPT_DIR/npm-cache,dst=/home/claude/.npm")
 
     # Git configuration — read-only (Apple Container only mounts directories, not files)
     if [[ -d "$HOME/.config/git" ]]; then

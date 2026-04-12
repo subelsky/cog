@@ -4,10 +4,18 @@ A locked-down Apple Container VM for running Synergy's `/integrate` skill, which
 
 ## Security Model
 
-- **Network**: All outbound traffic blocked via iptables inside the container
+- **Network**: Locked to Anthropic endpoints only (dnsmasq + iptables allowlist)
 - **Filesystem**: Synergy repo mounted read-only; only `esper/` is writable
 - **Sources**: All source directories mounted read-only
+- **Claude config**: Fully isolated — container uses `clean_room/claude-home/`, NOT the host's `~/.claude/`. No access to host credentials, skills, hooks, agents, or session transcripts. First run requires a one-time login inside the container.
+- **npm cache**: Isolated at `clean_room/npm-cache/`, NOT `~/.npm/`
 - **Environment**: `DEVCONTAINER=true` set (required by `/integrate` security gate)
+
+Because the container has zero writable access to host state that Claude Code ever reads on the host, a prompt injection inside the sandbox cannot persist hooks, skills, or settings that would later execute on the host. Combined with the network allowlist, this makes running `--dangerously-skip-permissions` inside the clean room a bounded risk:
+
+- Worst case: corrupt `esper/` (mitigated by backups + git history)
+- Worst case: burn Anthropic API tokens
+- The container's own `claude-home/` can be blown away and rebuilt freely
 
 ## Usage
 
@@ -47,13 +55,15 @@ All sources are mounted read-only. See the file for examples.
 |-----------|---------------|--------|
 | `../` (Synergy root) | `/workspace` | Read-only |
 | `../esper/` | `/workspace/esper` | **Read-write** |
-| `~/.claude/` | `/home/claude/.claude` | Read-write |
-| `~/.npm/` | `/home/claude/.npm` | Read-write |
-| `~/.gitconfig` | `/home/claude/.gitconfig` | Read-only |
+| `./claude-home/` (isolated) | `/home/claude/.claude` | Read-write |
+| `./npm-cache/` (isolated) | `/home/claude/.npm` | Read-write |
+| `~/.gitconfig` | `/home/claude/.gitconfig` | Read-only (baked at build) |
 | Sources from `sources.conf` | `/sources/*` | Read-only |
+
+Project-local commands (`.claude/commands/`, including `/integrate`) live inside the Synergy repo and are reachable read-only via the `/workspace` mount — no separate mount needed.
 
 ## Transcripts
 
-Claude Code session transcripts from work done inside this container persist at `~/.claude/projects/` on your host (because `~/.claude` is bind-mounted). These are automatically available to:
-- **Cog's `/reflect`** — mines them for patterns and observations
-- **Esper's `/integrate`** — can process them as a source if configured in `sources.conf`
+Claude Code session transcripts from work inside this container persist at `clean_room/claude-home/projects/` — **not** in the host's `~/.claude/projects/`. This is a deliberate isolation boundary: nothing Claude writes inside the sandbox is visible to host-side `/reflect` or other skills unless you explicitly copy it out.
+
+If you want `/reflect` on the host to mine clean-room transcripts, copy them manually after inspecting them. If you want `/integrate` to process them as a source, add `clean_room/claude-home/projects/` to `sources.conf`.

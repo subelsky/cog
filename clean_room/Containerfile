@@ -15,7 +15,6 @@ ARG USERNAME=claude
 RUN apt-get update && apt-get install -y --no-install-recommends \
     vim \
     ca-certificates \
-    curl \
     git \
     openssh-client \
     build-essential \
@@ -28,7 +27,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     iptables \
     ipset \
     iputils-ping \
-    netcat-openbsd \
     sudo \
     zsh \
     && rm -rf /var/lib/apt/lists/*
@@ -39,9 +37,14 @@ ENV LANG=en_US.UTF-8
 ENV LANGUAGE=en_US:en
 ENV LC_ALL=en_US.UTF-8
 
-# Node.js
-RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash - \
-    && apt-get install -y nodejs \
+# Node.js — install curl as a build-only dep, use it to fetch the NodeSource
+# setup script, then purge curl so it's not present in the runtime image.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl \
+    && curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash - \
+    && apt-get install -y --no-install-recommends nodejs \
+    && apt-get purge -y curl \
+    && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Claude Code
@@ -88,6 +91,7 @@ export VISUAL=vim
 export COLORTERM=truecolor
 export SHELL=/bin/zsh
 export TERM=${TERM:-xterm-256color}
+export PATH="$HOME/.local/bin:$PATH"
 ENVEOF
 RUN chown ${HOST_UID}:${HOST_GID} /home/${USERNAME}/.zshenv
 
