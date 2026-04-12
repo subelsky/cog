@@ -10,7 +10,21 @@
       "Bash(grep -oE 'fetch\\\\\\(`[^`]*`' /Users/subelsky/.claude/projects/-Users-subelsky-Documents-Synergy/f5e7112d-4b49-46c1-94ac-6e2f49fa46f4/tool-results/bnfsnv0hy.txt)",
       "Bash(wc:*)",
       "Bash(git -C /Users/subelsky/Documents/Synergy ls-files memory/)",
-      "Bash(git -C /Users/subelsky/Documents/Synergy ls-files esper/)"
+      "Bash(git -C /Users/subelsky/Documents/Synergy ls-files esper/)",
+      "Read(//Users/subelsky/.claude/**)",
+      "mcp__things__get_areas",
+      "mcp__things__get_inbox",
+      "mcp__things__get_today",
+      "mcp__things__get_upcoming",
+      "mcp__things__get_anytime",
+      "mcp__things__update_project",
+      "mcp__things__add_project",
+      "mcp__things__update_todo",
+      "Bash(gh repo:*)",
+      "Bash(gh api graphql -f 'query=:*)",
+      "WebFetch(domain:readwise.io)",
+      "mcp__things__show_item",
+      "mcp__things__get_projects"
     ]
   }
 }
