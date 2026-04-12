@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(container --help)",
+      "WebSearch",
+      "WebFetch(domain:lab.puga.com.br)",
+      "Bash(curl -sL https://lab.puga.com.br/cog/)",
+      "Bash(curl -sL https://lab.puga.com.br/cog/assets/index-CuEgGaY8.js)",
+      "Bash(grep -oE 'Br\\\\\\(`[^`]*`\\\\\\)' /Users/subelsky/.claude/projects/-Users-subelsky-Documents-Synergy/f5e7112d-4b49-46c1-94ac-6e2f49fa46f4/tool-results/bnfsnv0hy.txt)",
+      "Bash(grep -oE 'fetch\\\\\\(`[^`]*`' /Users/subelsky/.claude/projects/-Users-subelsky-Documents-Synergy/f5e7112d-4b49-46c1-94ac-6e2f49fa46f4/tool-results/bnfsnv0hy.txt)",
+      "Bash(wc:*)",
+      "Bash(git -C /Users/subelsky/Documents/Synergy ls-files memory/)",
+      "Bash(git -C /Users/subelsky/Documents/Synergy ls-files esper/)"
+    ]
+  }
+}
