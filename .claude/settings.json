@@ -27,12 +27,18 @@
       "Edit(~/Synergy/memory/**)",
       "Read(~/Synergy/esper/index.md)",
       "Read(~/Synergy/esper/log.md)",
-      "Read(~/Synergy/esper/pages/**)"
+      "Read(~/Synergy/esper/pages/**)",
+      "Edit(~/Synergy/esper/index.md)",
+      "Edit(~/Synergy/esper/log.md)",
+      "Edit(~/Synergy/esper/pages/topics/**)"
     ],
     "deny": [
       "Read(~/Synergy/esper/raw/**)",
       "Read(~/Synergy/esper/_staging/**)",
-      "Edit(~/Synergy/esper/**)"
+      "Edit(~/Synergy/esper/raw/**)",
+      "Edit(~/Synergy/esper/_staging/**)",
+      "Edit(~/Synergy/esper/sources/**)",
+      "Edit(~/Synergy/esper/pages/sources/**)"
     ]
   },
   "enabledPlugins": {
