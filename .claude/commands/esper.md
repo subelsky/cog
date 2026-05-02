@@ -1,4 +1,4 @@
-Use this skill to query or health-check the Esper knowledge base. Trigger if the user says "ember", "what do I know about", "search esper", "esper lint", "knowledge check", or similar query/maintenance requests.
+Use this skill to query or health-check the Esper knowledge base. Trigger if the user says "esper", "what do I know about", "search esper", "esper lint", "knowledge check", or similar query/maintenance requests.
 
 ## Domain
 
@@ -6,10 +6,10 @@ Esper knowledge base — query and maintenance.
 
 ## Modes
 
-`/ember` operates in two modes based on the user's request:
+`/esper` operates in two modes based on the user's request:
 
 - **Query mode** (default): "What do I know about X?", "Find connections to Y"
-- **Lint mode**: "ember lint", "check esper health", "esper maintenance"
+- **Lint mode**: "esper lint", "check esper health", "esper maintenance"
 
 ## Memory Files
 
@@ -75,7 +75,7 @@ Health-check the Esper knowledge base. Read broadly, report findings.
 Append findings to `esper/log.md`:
 
 ```markdown
-## [{today's date}] ember:lint
+## [{today's date}] esper:lint
 - Orphan source pages: {count} ({list or "none"})
 - Stale topics: {count} ({list or "none"})
 - Missing topics: {count} suggestions ({list or "none"})
@@ -100,6 +100,6 @@ Only fix with user approval. Report what was fixed in the log.
 
 ## Context
 
-This is the query and maintenance interface for Esper. It sits alongside `/integrate` (which ingests sources). `/ember` is what the user invokes when they want to search their knowledge base or check its health.
+This is the query and maintenance interface for Esper. It sits alongside `/integrate` (which ingests sources). `/esper` is what the user invokes when they want to search their knowledge base or check its health.
 
-The skill lives at `.claude/commands/ember.md` alongside existing Cog skills.
+The skill lives at `.claude/commands/esper.md` alongside existing Cog skills.

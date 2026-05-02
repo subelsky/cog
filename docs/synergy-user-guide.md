@@ -69,22 +69,22 @@ You don't write any of this. Synergy does all the filing, cross-referencing, and
 
 ### Querying your knowledge
 
-Use `/ember` to ask questions against your knowledge base:
+Use `/esper` to ask questions against your knowledge base:
 
 ```
-/ember What do I know about leadership?
-/ember What have I read about computer vision recently?
-/ember What connections exist between my podcast interviews and my TrayVerify work?
+/esper What do I know about leadership?
+/esper What have I read about computer vision recently?
+/esper What connections exist between my podcast interviews and my TrayVerify work?
 ```
 
 Synergy searches the topic index, reads relevant pages, and synthesizes an answer with citations back to specific sources.
 
 ### Health checks
 
-Use `/ember` in lint mode to keep Esper healthy:
+Use `/esper` in lint mode to keep Esper healthy:
 
 ```
-/ember lint
+/esper lint
 ```
 
 This finds orphan pages, stale topics, missing cross-references, and suggests new topics or sources to investigate.
@@ -101,7 +101,7 @@ This finds orphan pages, stale topics, missing cross-references, and suggests ne
 | `/visibility` | Cog | Career strategy | Networking, portfolio, positioning |
 | `/website` | Cog | Personal site | Website design work |
 | `/integrate` | Esper | Ingest new sources | When you have new content to process (devcontainer only) |
-| `/ember` | Esper | Query + lint | When you want to search your knowledge or health-check it |
+| `/esper` | Esper | Query + lint | When you want to search your knowledge or health-check it |
 | `/housekeeping` | Both | Maintenance | Weekly — prunes, archives, audits links |
 | `/reflect` | Both | Self-improvement | Weekly — mines conversations, condenses patterns |
 | `/foresight` | Both | Strategic nudges | Daily — connects dots across domains |
@@ -118,7 +118,7 @@ A quick decision tree for where information lives:
 **"I just learned something about myself"** — Cog observation
 **"I just read an interesting article"** — Esper source (via /integrate)
 **"I need to remember to do something"** — Cog action item
-**"What did I read about X?"** — Esper query (via /ember)
+**"What did I read about X?"** — Esper query (via /esper)
 **"What's going on with my project?"** — Cog domain hot-memory
 **"Connect the dots across everything"** — /foresight (reads both)
 
@@ -178,7 +178,7 @@ The mental model:
 2. **Set up Esper** by creating the directory structure and your first source manifests.
 3. **Configure your devcontainer** with read-only mounts to your source directories.
 4. **Run `/integrate`** to process your first batch of sources.
-5. **Use `/ember`** to explore what Synergy found.
+5. **Use `/esper`** to explore what Synergy found.
 6. **Set up the pipeline** — schedule `/foresight` daily and `/housekeeping` + `/reflect` weekly.
 
 The systems compound over time. The more you feed them, the more connections they find, the more useful they become. You curate and direct. Synergy does the grunt work.
