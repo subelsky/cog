@@ -131,7 +131,7 @@ if [[ "${1:-}" == "shell" ]]; then
     echo "[esper] Shell session — type 'exit' to quit"
     exec /bin/zsh
 elif [[ $# -gt 0 ]]; then
-    exec claude "$@"
+    exec claude "$@" --dangerously-skip-permissions
 else
-    exec claude
+    exec claude --dangerously-skip-permissions
 fi

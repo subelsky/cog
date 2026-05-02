@@ -58,6 +58,13 @@ check_prerequisites() {
         exit 1
     fi
 
+    if ! container system status &>/dev/null; then
+        log_error "Apple Container system is not running"
+        echo ""
+        echo "Start it with: container system start"
+        exit 1
+    fi
+
     if [[ ! -f "$SCRIPT_DIR/Containerfile" ]]; then
         log_error "Containerfile not found in $SCRIPT_DIR"
         exit 1
@@ -204,7 +211,8 @@ main() {
     check_prerequisites
     build_image_if_needed "$rebuild_flag"
     setup_directories
-    run_container "${run_args[@]}"
+    # bash 3.2 with set -u treats empty arrays as unbound; guard the expansion
+    run_container ${run_args[@]+"${run_args[@]}"}
 }
 
 main "$@"
