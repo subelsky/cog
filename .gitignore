@@ -20,3 +20,13 @@ esper/
 # Node (if any tooling is added later)
 node_modules/
 dist/
+
+# Bin: tracked as a directory via .gitkeep; symlinks are personal
+bin/*
+!bin/.gitkeep
+
+# PARA convenience symlinks (point to ~/Documents/{0..3}-*)
+/Projects
+/Areas
+/Resources
+/Archive

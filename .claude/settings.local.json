@@ -1,13 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Read",
-      "Glob",
-      "Grep",
-      "Edit(/Users/subelsky/Documents/Synergy/**)",
-      "Write(/Users/subelsky/Documents/Synergy/**)",
-      "Edit(/Users/subelsky/.claude/projects/-Users-subelsky-Documents-Synergy/**)",
-      "Write(/Users/subelsky/.claude/projects/-Users-subelsky-Documents-Synergy/**)",
+      "Edit(/Users/subelsky/Synergy/**)",
+      "Write(/Users/subelsky/Synergy/**)",
       "Bash(git:*)",
       "Bash(gh:*)",
       "Bash(grep:*)",
@@ -22,8 +17,6 @@
       "Bash(yq:*)",
       "Bash(sort:*)",
       "Bash(uniq:*)",
-      "Bash(awk:*)",
-      "Bash(sed:*)",
       "Bash(tree:*)",
       "Bash(file:*)",
       "Bash(stat:*)",
@@ -33,8 +26,9 @@
       "mcp__things__*",
       "mcp__apple-events__calendar_events",
       "Bash(claude --version)",
-      "Read(//Users/subelsky/Documents/0-Projects/**)",
-      "Bash(container ls *)"
+      "Bash(container ls *)",
+      "Bash(today *)",
+      "Bash(~/Synergy/bin/today *)"
     ],
     "deny": [
       "WebFetch",
