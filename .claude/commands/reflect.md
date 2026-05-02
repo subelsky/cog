@@ -45,17 +45,23 @@ Reference as needed (read `memory/domains.yml` to discover all active domains):
 
 ### 1. Review Recent Interactions
 
-**Source: Claude Code session transcripts.** Read `memory/cog-meta/reflect-cursor.md` for the session path and cursor.
+**Source: Claude Code session transcripts — across multiple project dirs.** Read `memory/cog-meta/reflect-cursor.md` for the per-dir cursor state.
+
+**Scope:** /reflect ingests from two kinds of project dirs under `~/.claude/projects/`:
+1. The Cog-native dir: `-Users-subelsky-Documents-Synergy`
+2. Container-synced dirs: any dir matching `-container-*` (populated by the host-side `cog-container-sync` launchd job every 15 minutes)
+
+All other project dirs (e.g. `-Users-subelsky-code-*` host-native repo sessions) are out of scope by default. To widen scope, add a new glob to this section AND to the Scope section of `reflect-cursor.md`.
 
 **How to read sessions:**
-1. Get `session_path` from reflect-cursor.md
-2. Glob for `*.jsonl` in that directory — each file is one session
-3. Get `last_processed` timestamp from reflect-cursor.md
-4. Only read sessions modified **after** `last_processed` (skip already-ingested sessions). If `last_processed` is `never`, read the most recent 3 sessions.
-5. Extract user messages: lines where `type` is `"user"` and `message.content` is a **string** (not an array — arrays are tool results, skip those)
-6. Extract assistant messages: lines where `type` is `"assistant"` and `message.content` contains items with `type: "text"`
-
-**After processing**, update `last_processed` in reflect-cursor.md to the current timestamp.
+1. Parse `reflect-cursor.md`: the `## Cursors` section has one line per dir in the format `<dir_name>  <ISO8601_timestamp>`. Build an in-memory map `dir -> timestamp`.
+2. **Discover new dirs**: glob `~/.claude/projects/-Users-subelsky-Documents-Synergy` and `~/.claude/projects/-container-*`. For every dir found that is NOT already in the cursor map, add it with a timestamp of the **current time**. This seeds new dirs to "now" — **do NOT backfill historical sessions**, even if files exist with older mtimes. (Rationale: a newly-synced container can have months of session history; auto-ingesting it would flood /reflect. If the user wants a backfill of a specific dir, they'll manually edit an older timestamp into the cursor before invoking /reflect.)
+3. For each in-scope dir, glob `**/*.jsonl` recursively — each file is one session (subagent transcripts live in nested `subagents/` subdirs).
+4. Filter to JSONL files with mtime **after** that dir's cursor timestamp. Process the filtered files.
+5. Extract user messages: lines where `type` is `"user"` and `message.content` is a **string** (not an array — arrays are tool results, skip those).
+6. Extract assistant messages: lines where `type` is `"assistant"` and `message.content` contains items with `type: "text"`.
+7. After processing each dir, update that dir's entry in the in-memory map to the current timestamp.
+8. At the end of step 1, write the updated cursor map back to `reflect-cursor.md`, preserving the file's L0 header, comment block, and `## Scope` section verbatim.
 
 **Look for:**
 - **Unresolved threads** — questions asked but never answered, topics dropped mid-conversation

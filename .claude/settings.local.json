@@ -31,7 +31,10 @@
       "Bash(diff:*)",
       "Bash(container --help)",
       "mcp__things__*",
-      "mcp__apple-events__calendar_events"
+      "mcp__apple-events__calendar_events",
+      "Bash(claude --version)",
+      "Read(//Users/subelsky/Documents/0-Projects/**)",
+      "Bash(container ls *)"
     ],
     "deny": [
       "WebFetch",
