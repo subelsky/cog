@@ -166,4 +166,6 @@ Summarize what happened:
 
 **conversation-json (Claude Chat):** JSON export of chat conversations. Each conversation has messages array. Summarize goals, key exchanges, decisions, and insights.
 
+**instapaper-markdown:** Each article is its own subdirectory under the mount path, named `<site-domain>_<12-char-hash>`. Subdirectory contains one file: `contents.md`, which begins with YAML frontmatter (source_type, url, title, site, date_published, date_flagged, date_fetched, word_count) followed by the article body in markdown. One subdirectory = one source page. Output filename: `instapaper-{slug-of-title}.md`.
+
 For formats not yet supported, report the items as skipped and note the format in the log.
