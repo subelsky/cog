@@ -28,7 +28,12 @@
       "Bash(claude --version)",
       "Bash(container ls *)",
       "Bash(today *)",
-      "Bash(~/Synergy/bin/today *)"
+      "Bash(~/Synergy/bin/today *)",
+      "Bash(bundle install *)",
+      "Bash(bundle exec *)",
+      "Bash(echo \"exit=$?\")",
+      "Bash(ruby -v)",
+      "Bash(/Users/subelsky/Synergy/bin/esper-lint version *)"
     ],
     "deny": [
       "WebFetch",
