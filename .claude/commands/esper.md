@@ -133,7 +133,7 @@ Only fix with user approval. Always report what was fixed in `esper/log.md`.
 ### Known caveats
 
 - **`fix` requires the esper directory to be in a git repo** with a clean working tree. Esper has its own git repo at `esper/.git`. Always run `cd esper && git status` before `fix`. If dirty, ask the user whether to commit/stash first.
-- **The `instapaper.yaml` manifest uses a slug-based cursor** (e.g. `last_processed: zakelfassi.com_2cfea35833e8`) instead of a date. The CLI flags this as `unparseable_cursor_date` and reports the manifest as stale. This is a known mismatch between the spec (date cursors) and one manifest format (filesystem-walk cursor). Note in the lint report but don't treat as actionable.
+- **Manifest cursor `kind`**: as of esper-lint v0.2.0, manifests with `cursor.kind: opaque` (e.g. `instapaper.yaml`'s slug-based cursor) are treated as fresh by design — no age computation, no staleness flag while the value is non-null. Date-kind manifests behave as before.
 - **The CLI does not check `## Connections` content** — only the section's presence. Cross-reference quality remains a judgment call.
 
 ---
