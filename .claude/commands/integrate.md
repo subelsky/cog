@@ -144,8 +144,33 @@ source_count: {count}
 - Updated: {n} existing topics ({list})
 ```
 
-7. **Advance cursors** — update each source manifest's cursor to reflect what was processed
+7. **Advance cursors** — update each source manifest's cursor to reflect what was processed (see "Manifest cursor format" below)
 8. **Clean staging** — delete all files in `esper/_staging/`
+
+## Manifest cursor format
+
+Every manifest's `cursor:` block must include a `kind:` discriminator. Two values:
+
+- **`kind: date`** — for time-ordered sources (Readwise, research papers, dated APIs). The cursor value is `YYYY-MM-DD`.
+- **`kind: opaque`** — for filesystem-walked sources where the cursor is a producer-defined position pointer (slug, hash, offset). `esper-lint` will not parse opaque values as dates and will not flag them as stale while non-null.
+
+Example (date):
+```yaml
+source_type: readwise-article
+cursor:
+  kind: date
+  last_processed: 2026-04-12
+```
+
+Example (opaque, instapaper-style filesystem walk):
+```yaml
+source_type: instapaper-article
+cursor:
+  kind: opaque
+  last_processed: zakelfassi.com_2cfea35833e8
+```
+
+When advancing a cursor, preserve the existing `kind:` value. When creating a new manifest, choose `kind:` based on the source's iteration model: chronological → `date`, filesystem walk or any non-time pointer → `opaque`. Manifests without an explicit `kind:` default to `date` for backward compatibility, but new manifests should always set it explicitly.
 
 ### Phase 3: Report
 
