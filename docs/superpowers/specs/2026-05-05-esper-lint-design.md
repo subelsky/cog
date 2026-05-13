@@ -198,8 +198,8 @@ Every subcommand emits a JSON object on stdout. Diagnostic warnings (e.g., "skip
       "total": 6,
       "stale_days_threshold": 30,
       "items": [
-        { "file": "claude-chat.yml", "cursor_kind": "last_sync", "value": null, "age_days": null },
-        { "file": "readwise.yml", "cursor_kind": "last_processed", "value": "2026-04-12", "age_days": 23 }
+        { "file": "claude-chat.yml", "cursor_kind": "date", "cursor_field": "last_sync", "value": null, "age_days": null },
+        { "file": "readwise.yml", "cursor_kind": "date", "cursor_field": "last_processed", "value": "2026-04-12", "age_days": 23 }
       ]
     },
     "index_drift": {
@@ -313,7 +313,8 @@ Every subcommand emits a JSON object on stdout. Diagnostic warnings (e.g., "skip
   "results": [
     {
       "file": "claude-chat.yml",
-      "cursor_kind": "last_sync",
+      "cursor_kind": "date",
+      "cursor_field": "last_sync",
       "value": null,
       "age_days": null,
       "is_stale": true
@@ -417,7 +418,12 @@ A source page is classified as a **stub** when its `topics` array is empty.
 
 ### Source manifest
 
-Located in `<esper-dir>/sources/*.{yml,yaml}`. The tool reads the top-level `cursor:` block and looks for `last_processed:` or `last_sync:` keys. Either may be a date string `YYYY-MM-DD` or null. If both are absent or null, the manifest is treated as "never processed."
+Located in `<esper-dir>/sources/*.{yml,yaml}`. The tool reads the top-level `cursor:` block, which has these fields:
+
+- `kind:` (optional) — `date` or `opaque`. Defaults to `date` if absent.
+- `last_processed:` or `last_sync:` — the cursor value. For `kind: date`, must be a date string `YYYY-MM-DD` or null. For `kind: opaque`, may be any string or null.
+
+If both `last_processed:` and `last_sync:` are absent or null, the manifest is treated as "never processed" regardless of `kind`. For `kind: opaque` with a non-null value, the tool treats the cursor as **fresh** and does not compute an age — the producing skill (e.g. `/integrate`) owns currency, since the value is a producer-defined position pointer (slug, hash, offset) rather than a wall-clock date.
 
 ### Index
 
@@ -463,11 +469,19 @@ A topic page lacks a Connections section if there is no `## Connections` heading
 ### 5. Stale manifests
 
 For each YAML file in `<esper-dir>/sources/`:
-- Read top-level `cursor:` block
-- If both `last_processed` and `last_sync` are absent or null → stale (`age_days: null`)
-- Otherwise compute `age_days = today - parsed_date`. If `age_days >= --stale-days`, stale.
+- Read top-level `cursor:` block; default `kind:` to `date` if absent.
+- Determine `cursor_field` (whichever of `last_processed` / `last_sync` is present, preferring `last_processed` if both exist).
+- Apply this matrix:
 
-`cursor_kind` in the output is whichever of `last_processed` / `last_sync` was present (preferring `last_processed` if both exist).
+| `kind` | `value` | Behavior |
+|---|---|---|
+| `date` | parseable `YYYY-MM-DD` | Compute `age_days`. Stale if `age_days >= --stale-days`. |
+| `date` | null | Stale; `age_days: null`. |
+| `date` | unparseable | Warn `unparseable_cursor_date`. Stale; `age_days: null`. |
+| `opaque` | non-null string | **Fresh** (the producing skill owns currency). `age_days: null`. |
+| `opaque` | null | Stale; `age_days: null`. |
+
+`cursor_kind` in output is the `kind:` discriminator (`"date"` | `"opaque"`). `cursor_field` reports which key (`last_processed` | `last_sync`) carried the value.
 
 ### 6. Index drift
 
@@ -633,7 +647,12 @@ The tool reads files within `--esper-dir` and shells out only to `git status` (w
 
 ## Versioning
 
-`EsperLint::VERSION = "0.1.0"`. Semver. Breaking changes to JSON output shape bump major.
+`EsperLint::VERSION` follows semver. Breaking changes to JSON output shape bump minor pre-1.0 (will bump major post-1.0).
+
+### Release notes
+
+- **0.2.0 (2026-05-13)**: Manifest cursor schema gained a `kind:` discriminator (`date` | `opaque`). JSON output for `stale_manifests` and `manifests` items now includes both `cursor_kind` (the `kind:` discriminator, `"date"` | `"opaque"`) and `cursor_field` (the cursor field name, `"last_processed"` | `"last_sync"`). In v0.1.x, `cursor_kind` had carried the field name — that role moved to `cursor_field`. Consumers parsing manifest JSON must update accordingly. Manifests without an explicit `kind:` default to `date` for backward compatibility.
+- **0.1.x (2026-05-05 → 2026-05-08)**: Initial release; bug fixes and tighter spec conformance.
 
 ## Permissions allowlist (in Synergy)
 
