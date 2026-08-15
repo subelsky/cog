@@ -1,5 +1,10 @@
 # esper-lint — Design Spec
 
+> **Partly superseded.** v0.3.0 (2026-08-14) removed every write path — `fix`, `add-source`, and
+> the `Fixes`/`Mutations`/`Git` modules — and made `check` summary-first. Sections below that
+> describe mutations or safe-fixes are historical. See
+> [`2026-08-14-esper-lint-readonly-design.md`](./2026-08-14-esper-lint-readonly-design.md).
+
 **Date:** 2026-05-05
 **Author:** Mike Subelsky (with Claude)
 **Status:** Approved for implementation
@@ -75,7 +80,7 @@ Total surface area Claude reinvented from scratch: roughly 200 lines of bash + P
 
 ## CLI surface
 
-Single binary `esper-lint`, dispatched by subcommand. The binary lives in the user's tools project and is symlinked to `bin/esper-lint` in the Synergy repo. The implementation does not need to know about the symlink.
+Single binary `esper-lint`, dispatched by subcommand. The binary lives at `tools/esper-lint/` in this repo (it lived in a separate `tools` project until 2026-08-15) and is symlinked to `bin/esper-lint`. The implementation does not need to know about the symlink.
 
 ### Subcommands
 
@@ -456,7 +461,7 @@ A source page is an orphan if no topic page's `## Sources` section contains a wi
 
 ### 2. source_count mismatch
 
-For each topic page, compare `source_count` in frontmatter to the actual count of `^- \[\[pages/sources/` lines in `## Sources`. Report any mismatch.
+For each topic page, compare `source_count` in frontmatter to the count of **unique** source slugs referenced by `^- \[\[pages/sources/SLUG\]\]` lines in `## Sources`. Report any mismatch. Duplicate entries collapse before the comparison, so a topic is not double-flagged by both `source_count_mismatches` and `duplicate_sources`.
 
 ### 3. Missing topic candidates
 
@@ -525,7 +530,7 @@ The fix must be idempotent: running `fix` twice in a row produces no changes on 
 
 Single Ruby file (or small handful, see below), pure stdlib. No gems beyond the dev linter (`standard`).
 
-### File layout (the tools project, not the Synergy repo)
+### File layout (`tools/esper-lint/` in this repo; a separate `tools` project before 2026-08-15)
 
 ```
 esper-lint/

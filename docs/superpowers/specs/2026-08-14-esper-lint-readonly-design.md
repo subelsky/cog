@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-14
 **Status:** Draft, awaiting user review
-**Repo:** `/workspaces/tools/esper-lint` (host: `~/super_containers/personal/tools/esper-lint`) — *not* the Synergy repo
+**Location:** `tools/esper-lint/` inside the Synergy repo (moved here 2026-08-15 from the standalone `tools` repo)
 **Supersedes the write half of:** [`2026-05-05-esper-lint-design.md`](./2026-05-05-esper-lint-design.md)
 **Implementation order:** first of three (this → container split → cog re-baseline)
 
@@ -178,9 +178,10 @@ that is a fact about the current data, not about their worth.
 
 `0.2.0` → **`0.3.0`**. Removing subcommands is breaking; pre-1.0 this is a minor bump.
 
-## Downstream changes (Synergy repo)
+## Downstream changes
 
-These land in the same change set even though they live in a different repository.
+Originally these lived in a separate repository from the tool. Since the 2026-08-15 move they are
+all in this repo, so they land in one change set.
 
 **`.claude/commands/esper.md`** — delete the `### Fixing — what the CLI handles vs. what you do`
 and `### Auto-fix protocol` sections (~30 lines). Replace with a short "Fixing" section:

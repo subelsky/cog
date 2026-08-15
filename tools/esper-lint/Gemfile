@@ -1,0 +1,14 @@
+# frozen_string_literal: true
+
+source "https://rubygems.org"
+
+ruby ">= 3.3"
+
+group :development do
+  # minitest was historically bundled with Ruby's stdlib but is no longer
+  # auto-loaded under Ruby 4.x — `require "minitest/autorun"` raises LoadError
+  # without an explicit dependency here. Do not remove.
+  gem "minitest"
+  gem "rake"
+  gem "standard"
+end

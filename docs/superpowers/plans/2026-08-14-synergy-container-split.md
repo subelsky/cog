@@ -57,24 +57,15 @@ Move `additionalDirectories` (the four PARA folders) and the `Read(~/Documents/.
 `Edit(~/Documents/...)` rules from `settings.json` into `settings.local.json` — they are
 host-only and currently sit in the wrong file.
 
-## Task 2 — `bin/esper-lint` wrapper
+## Task 2 — `bin/esper-lint`
 
-Replace the dangling symlink with a committed script:
+**Revised 2026-08-15.** The original task specified a path-probing wrapper because the tool lived
+outside the repo. `esper-lint` now lives at `tools/esper-lint/`, so `bin/esper-lint` is a plain
+relative symlink — portable across host and container with no probing and no stale fallback.
 
-```sh
-#!/usr/bin/env bash
-# Resolves the esper-lint checkout from either the host or a container.
-set -euo pipefail
-for d in "$HOME/super_containers/personal/tools/esper-lint" /workspaces/tools/esper-lint; do
-  [ -x "$d/bin/esper-lint" ] && exec "$d/bin/esper-lint" "$@"
-done
-echo "esper-lint not found; checked host and container paths" >&2
-exit 127
-```
-
-- `rm bin/esper-lint` (symlink), write the script, `chmod +x`.
+- `rm bin/esper-lint`, then `ln -s ../tools/esper-lint/bin/esper-lint bin/esper-lint`.
 - `.gitignore`: add `!bin/esper-lint` after the existing `!bin/.gitkeep`.
-- Verify from the container: `bin/esper-lint version` prints a version.
+- Verify from both sides: `bin/esper-lint version` prints a version.
 
 ## Task 3 — `.devcontainer/`
 

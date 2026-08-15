@@ -51,7 +51,7 @@ Container CLI, so it cannot be launched from inside a devcontainer. Its `sources
 entirely commented out, so it has no source mounts configured and cannot currently ingest
 anything.
 
-**Dangling symlinks.** `bin/esper-lint` → `/Users/subelsky/super_containers/personal/tools/…` and
+**Dangling symlinks.** `bin/esper-lint` → `/Users/subelsky/super_containers/personal/tools/…` (resolved 2026-08-15 by moving the tool into the repo) and
 the four PARA symlinks (`Projects`, `Areas`, `Resources`, `Archive`) → `/Users/subelsky/Documents/…`
 all resolve on the host and dangle in the container.
 
@@ -202,16 +202,17 @@ it.
 
 ### 5. `bin/` portability
 
-`bin/esper-lint` becomes a small committed shell wrapper instead of a symlink:
+**Superseded 2026-08-15.** This section originally specified a path-probing shell wrapper,
+because `esper-lint` lived in a separate `tools/` repo outside Synergy. The tool has since been
+moved to `tools/esper-lint/` *inside* this repo, so the problem the wrapper solved no longer
+exists. `bin/esper-lint` is now a plain relative symlink:
 
-```sh
-#!/usr/bin/env bash
-# Resolves the esper-lint checkout from either the host or a container.
-for d in "$HOME/super_containers/personal/tools/esper-lint" /workspaces/tools/esper-lint; do
-  [ -x "$d/bin/esper-lint" ] && exec "$d/bin/esper-lint" "$@"
-done
-echo "esper-lint not found; checked host and container paths" >&2; exit 127
 ```
+bin/esper-lint -> ../tools/esper-lint/bin/esper-lint
+```
+
+A relative symlink resolves identically on the host and in any container, needs no probing, and
+has no fallback path that can silently go stale.
 
 This requires an exception to the existing `.gitignore` rule (`bin/*` with
 `!bin/.gitkeep`) — add `!bin/esper-lint`. `Bash(~/Synergy/bin/*:*)` in `settings.json` is a

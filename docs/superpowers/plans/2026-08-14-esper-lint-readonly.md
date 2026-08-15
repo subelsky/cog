@@ -1,7 +1,7 @@
 # esper-lint → Read-Only — Implementation Plan
 
 **Spec:** [`../specs/2026-08-14-esper-lint-readonly-design.md`](../specs/2026-08-14-esper-lint-readonly-design.md)
-**Repo:** `/workspaces/tools/esper-lint`
+**Location:** `tools/esper-lint/` inside the Synergy repo (moved here 2026-08-15)
 **Target version:** 0.3.0
 
 ## Environment notes
@@ -100,5 +100,5 @@ must be empty after every command above.
 
 ## Out of scope
 
-`.claude/commands/esper.md` and `.claude/settings.local.json` live in the Synergy repo and are
-handled there, not by this plan.
+`.claude/commands/esper.md` and `.claude/settings.local.json` are handled by the container-split
+plan, not here. (Before 2026-08-15 they were also in a different repository; they no longer are.)

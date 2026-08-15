@@ -146,6 +146,6 @@ Order the offers cheapest-first when presenting them: counts and duplicates, the
 
 This is the query and maintenance interface for Esper. It sits alongside `/integrate` (ingestion). `/esper` is what the user invokes to search their knowledge base or check its health.
 
-The deterministic toolkit is `bin/esper-lint` (symlinked from the user's tools project). Spec: `docs/superpowers/specs/2026-05-05-esper-lint-design.md`. Plan: `docs/superpowers/plans/2026-05-05-esper-lint.md`.
+The deterministic toolkit is `bin/esper-lint`, a relative symlink into `tools/esper-lint/` in this repo. Spec: `docs/superpowers/specs/2026-05-05-esper-lint-design.md`. Plan: `docs/superpowers/plans/2026-05-05-esper-lint.md`.
 
 The skill lives at `.claude/commands/esper.md` alongside other Cog skills.

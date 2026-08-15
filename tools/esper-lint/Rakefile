@@ -1,0 +1,30 @@
+# frozen_string_literal: true
+
+require "rake/testtask"
+
+Rake::TestTask.new(:test) do |t|
+  t.libs << "lib" << "test"
+  t.test_files = FileList["test/test_*.rb"]
+  t.warning = false
+end
+
+namespace :test do
+  # Runs the suite under `ruby --disable-gems`, so anything the library forgets
+  # to require (Pathname, Set) blows up here instead of at a caller's first use.
+  # minitest lives in a gem, so its lib dir is passed through explicitly.
+  desc "Run the test suite with RubyGems disabled (catches missing requires)"
+  task :isolated do
+    minitest_lib = File.join(Gem::Specification.find_by_name("minitest").full_gem_path, "lib")
+    script = 'Dir["test/test_*.rb"].each { |f| require "./#{f}" }'
+    sh "ruby", "--disable-gems", "-I#{minitest_lib}", "-Ilib", "-Itest", "-e", script
+  end
+end
+
+# standard is optional: it is not installed in every container this runs in,
+# and it is not a gate for the test tasks.
+begin
+  require "standard/rake"
+  task default: %i[test standard]
+rescue LoadError
+  task default: %i[test]
+end
