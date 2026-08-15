@@ -182,9 +182,17 @@ is inside it.
 
 ## Verify after building (macOS host)
 
+Run it with `devcontainer exec`, **not** `docker exec`. `devcontainer exec` runs
+as `remoteUser` (`vscode`), which is the account the agent actually uses;
+`docker exec` defaults to the image's `USER`, which is root here, and root can
+write things `vscode` cannot. A verification run as root proves nothing.
+
 ```bash
 devcontainer exec --workspace-folder ~/Synergy bash -lc '
+  id -un                                          # must print vscode, not root
   echo "SYNERGY_RAW=$SYNERGY_RAW"                 # must print 1
+  touch /workspaces/Synergy/stray 2>&1            # must fail: Permission denied
+  touch /workspaces/Synergy/.claude/settings.local.json 2>&1  # must fail: Permission denied
   pwd                                             # must print /workspaces/Synergy
   ls /workspaces/Synergy/memory                   # must fail: No such file or directory
   ls -ld /workspaces/Synergy/esper                # exists, writable
@@ -224,6 +232,16 @@ refuse in the personal supercontainer.
   host network is not blanket-allowed, unlike the stock Claude Code devcontainer
   firewall. If some tooling needs to reach into the container over TCP, that is
   the rule to revisit.
+- **The firewall does not survive a plain `docker start`.** It runs from
+  `postStartCommand`, which only the devcontainer CLI executes; `docker start
+  synergy-raw` yields a container with `-P OUTPUT ACCEPT` and full egress. Always
+  start with `devcontainer up --workspace-folder .`. `/integrate`'s security gate
+  probes DNS and refuses to run when the firewall is down, so the dangerous
+  operation is gated even if the container is started the wrong way — but the
+  container itself is still unrestricted until the firewall is applied.
+- **The project root is root-owned and read-only to `vscode`**; only `esper/` is
+  writable. Without that, the agent could write `.claude/settings.local.json` or
+  `.claude/skills/` and grant itself the tools the settings deny list withholds.
 - **No git identity or credentials** are mounted, and `esper/.git` is shadowed by
   a read-only tmpfs, so git does not function in here at all. Committing `esper/`
   is the host's job. Without the shadow, a writable `esper/.git` would be a

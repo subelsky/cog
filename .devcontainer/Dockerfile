@@ -72,9 +72,20 @@ RUN rm -f /etc/sudoers.d/${USERNAME} /etc/sudoers.d/vscode /etc/sudoers.d/node \
 # There is deliberately no /workspaces/Synergy/memory. See ../docs/ and README.md.
 # /workspaces/Synergy/CLAUDE.md is created empty so the single-file bind mount
 # always has a target; some runtimes refuse to create one.
+#
+# Ownership: root, mode 0755 — readable and traversable by ${USERNAME}, writable
+# by nobody. esper/ is a bind mount and carries the host's ownership, so it stays
+# writable; everything else under the project root does not.
+#
+# This is what stops the agent from granting itself permissions. Only
+# .claude/commands is a read-only mount — the .claude directory ITSELF is
+# container layer, so a user-writable one would let an injection drop a
+# .claude/settings.local.json (or a .claude/skills/) and hand itself the tools
+# the settings deny list is meant to withhold.
 RUN mkdir -p /workspaces/Synergy/esper /workspaces/Synergy/.claude/commands /sources \
     && touch /workspaces/Synergy/CLAUDE.md \
-    && chown -R ${USERNAME}:${USERNAME} /workspaces \
+    && chown -R root:root /workspaces \
+    && chmod -R 0755 /workspaces \
     && chmod 0755 /sources
 
 # --- Isolated Claude + npm state -------------------------------------------

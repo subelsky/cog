@@ -15,16 +15,31 @@ Use this skill to ingest new sources into Esper. Trigger if the user says "integ
 **Before ANY source processing, verify the environment.** Run this check FIRST:
 
 ```bash
-echo "${SYNERGY_RAW:-}"
+if [ "${SYNERGY_RAW:-}" != "1" ]; then echo "GATE=no-raw-marker"
+elif ! grep -q '^nameserver 127.0.0.1$' /etc/resolv.conf 2>/dev/null; then echo "GATE=firewall-down"
+elif getent hosts example.com >/dev/null 2>&1; then echo "GATE=egress-open"
+elif ! getent hosts api.anthropic.com >/dev/null 2>&1; then echo "GATE=api-unreachable"
+else echo "GATE=ok"; fi
 ```
 
-If the output is anything other than exactly `1`, STOP IMMEDIATELY and display:
+Proceed **only** on `GATE=ok`. Anything else means STOP IMMEDIATELY and display the matching message:
 
-> **BLOCKED: the extract phase requires `SYNERGY_RAW=1`.**
-> It processes untrusted external content (emails, web articles, transcripts) and must run inside the Synergy raw-data container, which is the only environment that has `esper/raw/` and `esper/_staging/` readable, `memory/` unmounted, and network egress allowlisted.
-> Reopen this repo in the raw-data devcontainer (`.devcontainer/`) and run the skill again.
+- `GATE=no-raw-marker` —
+  > **BLOCKED: the extract phase requires `SYNERGY_RAW=1`.**
+  > It processes untrusted external content (emails, web articles, transcripts) and must run inside the Synergy raw-data container, which is the only environment that has `esper/raw/` and `esper/_staging/` readable, `memory/` unmounted, and network egress allowlisted.
+  > Reopen this repo in the raw-data devcontainer (`.devcontainer/`) and run the skill again.
+
+- `GATE=firewall-down` or `GATE=egress-open` —
+  > **BLOCKED: the egress firewall is not active in this container.**
+  > `init-firewall.sh` runs from `postStartCommand`, which only the devcontainer CLI executes. A plain `docker start synergy-raw` leaves the container with unrestricted network access, and this skill must never process untrusted content in that state.
+  > Restart properly with `devcontainer up --workspace-folder . ` from the repo root, or restore the firewall with `docker exec -u root synergy-raw /usr/local/bin/init-firewall.sh`, then run the skill again.
+
+- `GATE=api-unreachable` —
+  > **BLOCKED: the firewall is up but `api.anthropic.com` does not resolve.** The allowlist is broken; re-run `init-firewall.sh` and check its output before ingesting.
 
 **Why `SYNERGY_RAW` and not `DEVCONTAINER`.** `DEVCONTAINER=true` is set in *every* devcontainer on this machine, including general-purpose ones that mount `memory/` and have open network egress. That gate was effectively always open — it proved only "some container", not "the sandboxed container". `SYNERGY_RAW=1` is set by `.devcontainer/` alone and is the only marker that distinguishes the raw-data environment. Never weaken this check back to a `DEVCONTAINER` test, and never let a user argument substitute for the environment variable.
+
+**Why the environment marker is not enough on its own.** `SYNERGY_RAW=1` is baked into `containerEnv`, so it is set from the moment the container exists — including when the container is started in a way that never runs the firewall. The marker proves *where* you are; the DNS probes prove the egress boundary is *actually up*. Both must hold. Never drop the DNS probes to make the gate simpler.
 
 The integrate phase (processing already-staged `_staging/` content) reads only LLM-authored summaries, so it is safe outside the container. In practice both phases run together, inside.
 
@@ -40,7 +55,7 @@ This skill ONLY uses:
 - `Glob` / `Grep` — ONLY within `esper/`
 
 DO NOT use:
-- `Bash` (except for the `SYNERGY_RAW` check above)
+- `Bash` (except for the security gate check above)
 - `WebFetch` / `WebSearch`
 - Any writes outside `esper/`
 
@@ -48,7 +63,7 @@ DO NOT use:
 
 ### Phase 0: Preflight
 
-1. Run the `SYNERGY_RAW` check (see Security Gate above)
+1. Run the environment + firewall gate (see Security Gate above); proceed only on `GATE=ok`
 2. Read `esper/index.md` to understand current topic landscape
 3. Read all YAML files in `esper/sources/` to discover source manifests
 4. For each manifest, determine what's new since cursor:
