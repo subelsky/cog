@@ -81,7 +81,8 @@ Two environments share this repo. They are not interchangeable.
 |---|---|---|
 | For | Reading memory, querying Esper, linting, planning | `/integrate` only |
 | `memory/` | read-write | **not mounted** |
-| `esper/raw`, `esper/_staging` | denied | read-write |
+| `esper/_staging` | denied | read-write |
+| Raw sources (`~/Synergy-Esper-Sources`) | outside the repo, unreachable | read-only at `/sources/*` |
 | MCP | things, apple-events | none |
 | Web egress | denied | allowlisted (Anthropic, npm) |
 | Marker | — | `SYNERGY_RAW=1` |

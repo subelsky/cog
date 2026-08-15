@@ -86,9 +86,16 @@ Uncomment the ones you use and fix the paths — a bind mount whose host source
 does not exist prevents the container from starting. All source mounts are
 read-only.
 
-Note that `esper/sources/*.yml` currently points `readwise`, `goodreads`,
-`instapaper`, and `research-papers` at `esper/raw/*`, which is already inside the
-esper mount. Only `claude-code.yml` and `email.yml` expect `/sources/`.
+Untrusted source content lives at `~/Synergy-Esper-Sources`, **outside the repo**,
+and is mounted read-only at `/sources/*`. It used to live at `esper/raw/*`, inside
+the repo and committed to the esper git repo — which meant the host Claude session
+could reach it. The `Read(/esper/raw/**)` deny in `.claude/settings.json` covers
+the file tools and Bash path arguments, but not git object access: `git -C esper
+show HEAD:raw/...` reads the blob with no filesystem path to match. Same reasoning
+as `memory/` not being mounted here — absence beats a deny rule.
+
+`claude-code.yml` and `email.yml` still point at source dirs that have not been
+moved out yet; their mounts stay commented until they have real paths.
 
 ## Network allowlist
 

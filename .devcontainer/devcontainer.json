@@ -69,20 +69,30 @@
 
     // ------------------------------------------------------------------------
     // Source mounts — all read-only, all under /sources.
+    // (Entries below carry LEADING commas, so the last required mount above
+    // must not have a trailing one.)
     //
-    // Uncomment the ones you use and correct the host paths; a bind mount whose
-    // source does not exist makes the container fail to start.
+    // These used to live at esper/raw/*, inside the repo and inside the esper
+    // git repo. That put untrusted source content where the HOST Claude session
+    // could reach it: the Read(/esper/raw/**) deny in .claude/settings.json
+    // covers file tools and Bash path arguments, but not git object access
+    // (`git -C esper show HEAD:raw/...` reads the blob with no path to match),
+    // and all of it was committed.
     //
-    // Note on what is already reachable: esper/sources/*.yml currently point
-    // readwise, goodreads, instapaper, and research_papers at esper/raw/*, which
-    // arrives inside the esper mount above. These /sources mounts are for feeding
-    // in fresh exports and for the two manifests that do use /sources
-    // (claude-code.yml, email.yml).
+    // Same principle as memory/ not being mounted here: absence beats a deny
+    // rule. The host repo now holds no untrusted content, so there is nothing to
+    // forbid and nothing in git to recover.
+    //
+    // A bind mount whose host source does not exist makes the container fail to
+    // start — keep these in sync with ~/Synergy-Esper-Sources.
     // ------------------------------------------------------------------------
-    // ,"source=${localEnv:HOME}/Documents/readwise,target=/sources/readwise,type=bind,readonly"
-    // ,"source=${localEnv:HOME}/Documents/evernote,target=/sources/evernote,type=bind,readonly"
-    // ,"source=${localEnv:HOME}/Documents/goodreads,target=/sources/goodreads,type=bind,readonly"
-    // ,"source=${localEnv:HOME}/Documents/instapaper,target=/sources/instapaper,type=bind,readonly"
+    ,"source=${localEnv:HOME}/Synergy-Esper-Sources/readwise,target=/sources/readwise,type=bind,readonly"
+    ,"source=${localEnv:HOME}/Synergy-Esper-Sources/evernote,target=/sources/evernote,type=bind,readonly"
+    ,"source=${localEnv:HOME}/Synergy-Esper-Sources/goodreads,target=/sources/goodreads,type=bind,readonly"
+    ,"source=${localEnv:HOME}/Synergy-Esper-Sources/instapaper,target=/sources/instapaper,type=bind,readonly"
+    ,"source=${localEnv:HOME}/Synergy-Esper-Sources/research_papers,target=/sources/research_papers,type=bind,readonly"
+
+    // Not yet moved — uncomment when these source dirs exist.
     // ,"source=${localEnv:HOME}/Documents/email,target=/sources/email,type=bind,readonly"
     // ,"source=${localEnv:HOME}/.claude/projects,target=/sources/claude-code,type=bind,readonly"
 
