@@ -1,0 +1,118 @@
+// Synergy raw-data container — the Esper ingestion sandbox.
+//
+// This file is the security boundary. The mount list below is the whole point:
+// untrusted source content is processed here, and the private memory/ tree is
+// simply not present to be leaked. Read .devcontainer/README.md before editing.
+//
+// devcontainer.json is JSONC — comments are part of the format.
+{
+  "name": "Synergy raw-data (Esper ingestion)",
+
+  "build": {
+    // Context is this directory, not the repo root: no repo content enters the image.
+    "dockerfile": "Dockerfile",
+    "context": "."
+  },
+
+  // No features. Every feature is another build-time supply chain in a container
+  // whose reason to exist is a small attack surface.
+  "features": {},
+
+  // --------------------------------------------------------------------------
+  // Filesystem
+  // --------------------------------------------------------------------------
+  // The default devcontainer behaviour is to bind-mount the whole workspace
+  // folder. That would re-introduce memory/ and defeat the design, so the
+  // workspace mount is overridden to esper/ alone. /workspace itself comes from
+  // the image (container layer, ephemeral, host-invisible) and everything the
+  // container may see from the host is listed explicitly.
+  "workspaceMount": "source=${localWorkspaceFolder}/esper,target=/workspace/esper,type=bind,consistency=cached",
+  "workspaceFolder": "/workspace",
+
+  "mounts": [
+    // Skill definitions, including /integrate. Read-only: a prompt injection in
+    // a source file must not be able to rewrite the skill that reads it.
+    "source=${localWorkspaceFolder}/.claude/commands,target=/workspace/.claude/commands,type=bind,readonly",
+
+    // The container's own CLAUDE.md, mounted over the project root's. The repo's
+    // CLAUDE.md is never mounted — it tells the assistant to read memory/, which
+    // does not exist here.
+    "source=${localWorkspaceFolder}/.devcontainer/CLAUDE.md,target=/workspace/CLAUDE.md,type=bind,readonly",
+
+    // Isolated Claude config dir (CLAUDE_CONFIG_DIR) — NOT the host's ~/.claude.
+    // Named volume so credentials survive a rebuild; blow it away with
+    // `docker volume rm synergy-raw-claude-config` to force a fresh login.
+    "source=synergy-raw-claude-config,target=/home/vscode/.claude-raw,type=volume",
+
+    // Isolated npm cache — NOT the host's ~/.npm.
+    "source=synergy-raw-npm-cache,target=/home/vscode/.npm,type=volume"
+
+    // ------------------------------------------------------------------------
+    // Source mounts — all read-only, all under /sources.
+    //
+    // Uncomment the ones you use and correct the host paths; a bind mount whose
+    // source does not exist makes the container fail to start.
+    //
+    // Note on what is already reachable: esper/sources/*.yml currently point
+    // readwise, goodreads, instapaper, and research_papers at esper/raw/*, which
+    // arrives inside the esper mount above. These /sources mounts are for feeding
+    // in fresh exports and for the two manifests that do use /sources
+    // (claude-code.yml, email.yml).
+    // ------------------------------------------------------------------------
+    // ,"source=${localEnv:HOME}/Documents/readwise,target=/sources/readwise,type=bind,readonly"
+    // ,"source=${localEnv:HOME}/Documents/evernote,target=/sources/evernote,type=bind,readonly"
+    // ,"source=${localEnv:HOME}/Documents/goodreads,target=/sources/goodreads,type=bind,readonly"
+    // ,"source=${localEnv:HOME}/Documents/instapaper,target=/sources/instapaper,type=bind,readonly"
+    // ,"source=${localEnv:HOME}/Documents/email,target=/sources/email,type=bind,readonly"
+    // ,"source=${localEnv:HOME}/.claude/projects,target=/sources/claude-code,type=bind,readonly"
+
+    // If the cog re-baseline moves skills from .claude/commands to .claude/skills,
+    // add this mount (and keep or drop the commands one to match the repo):
+    // ,"source=${localWorkspaceFolder}/.claude/skills,target=/workspace/.claude/skills,type=bind,readonly"
+  ],
+
+  // --------------------------------------------------------------------------
+  // Environment
+  // --------------------------------------------------------------------------
+  "containerEnv": {
+    // The /integrate gate. Set ONLY here — not by the personal or work
+    // supercontainers — so the skill runs in this sandbox and nowhere else.
+    "SYNERGY_RAW": "1",
+    "DEVCONTAINER": "true",
+
+    // Isolated config dir. Never the host's ~/.claude.
+    "CLAUDE_CONFIG_DIR": "/home/vscode/.claude-raw",
+    "NPM_CONFIG_CACHE": "/home/vscode/.npm",
+    "NPM_CONFIG_PREFIX": "/home/vscode/.npm-global",
+
+    // sentry.io is not on the firewall allowlist; disabling error reporting
+    // avoids pointless blocked connections at startup.
+    "DISABLE_ERROR_REPORTING": "1",
+
+    "LANG": "en_US.UTF-8",
+    "LC_ALL": "en_US.UTF-8",
+    "LANGUAGE": "en_US:en"
+  },
+
+  // --------------------------------------------------------------------------
+  // Network
+  // --------------------------------------------------------------------------
+  // NET_ADMIN/NET_RAW are what let init-firewall.sh install its own rules inside
+  // this container's network namespace. They confer no privilege on the host.
+  "runArgs": ["--cap-add=NET_ADMIN", "--cap-add=NET_RAW"],
+
+  // Runs on every start, as vscode, via the single sudoers entry in the
+  // Dockerfile. Fails closed: a non-zero exit here means egress is fully denied
+  // and the devcontainer reports the failure.
+  "postStartCommand": "sudo /usr/local/bin/init-firewall.sh",
+
+  "remoteUser": "vscode",
+
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "zsh"
+      }
+    }
+  }
+}

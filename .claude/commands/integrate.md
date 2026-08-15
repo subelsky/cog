@@ -1,21 +1,32 @@
+---
+name: integrate
+description: >
+  Ingest new sources into the Esper knowledge base — extract to staging, then
+  integrate into source and topic pages. Trigger on "integrate", "ingest",
+  "process sources", "feed esper". Raw-data container only.
+---
+
+# Esper Integrate
+
 Use this skill to ingest new sources into Esper. Trigger if the user says "integrate", "ingest", "process sources", "feed esper", or similar ingestion requests.
 
 ## SECURITY GATE — MANDATORY
 
-**Before ANY source processing, verify the environment:**
-
-Run this check FIRST:
+**Before ANY source processing, verify the environment.** Run this check FIRST:
 
 ```bash
-echo $DEVCONTAINER
+echo "${SYNERGY_RAW:-}"
 ```
 
-If the output is NOT `true`, STOP IMMEDIATELY and display:
+If the output is anything other than exactly `1`, STOP IMMEDIATELY and display:
 
-> **BLOCKED: `/integrate` extract phase requires `DEVCONTAINER=true`.**
-> The extract phase processes untrusted content (emails, web articles) and must run inside a sandboxed devcontainer. This is a security requirement, not a suggestion.
+> **BLOCKED: the extract phase requires `SYNERGY_RAW=1`.**
+> It processes untrusted external content (emails, web articles, transcripts) and must run inside the Synergy raw-data container, which is the only environment that has `esper/raw/` and `esper/_staging/` readable, `memory/` unmounted, and network egress allowlisted.
+> Reopen this repo in the raw-data devcontainer (`.devcontainer/`) and run the skill again.
 
-The integrate phase (processing `_staging/` content) may run outside a devcontainer since it only reads LLM-authored summaries.
+**Why `SYNERGY_RAW` and not `DEVCONTAINER`.** `DEVCONTAINER=true` is set in *every* devcontainer on this machine, including general-purpose ones that mount `memory/` and have open network egress. That gate was effectively always open — it proved only "some container", not "the sandboxed container". `SYNERGY_RAW=1` is set by `.devcontainer/` alone and is the only marker that distinguishes the raw-data environment. Never weaken this check back to a `DEVCONTAINER` test, and never let a user argument substitute for the environment variable.
+
+The integrate phase (processing already-staged `_staging/` content) reads only LLM-authored summaries, so it is safe outside the container. In practice both phases run together, inside.
 
 ## Domain
 
@@ -29,7 +40,7 @@ This skill ONLY uses:
 - `Glob` / `Grep` — ONLY within `esper/`
 
 DO NOT use:
-- `Bash` (except for the DEVCONTAINER check above)
+- `Bash` (except for the `SYNERGY_RAW` check above)
 - `WebFetch` / `WebSearch`
 - Any writes outside `esper/`
 
@@ -37,7 +48,7 @@ DO NOT use:
 
 ### Phase 0: Preflight
 
-1. Run the DEVCONTAINER check (see Security Gate above)
+1. Run the `SYNERGY_RAW` check (see Security Gate above)
 2. Read `esper/index.md` to understand current topic landscape
 3. Read all YAML files in `esper/sources/` to discover source manifests
 4. For each manifest, determine what's new since cursor:

@@ -1,13 +1,7 @@
 {
   "permissions": {
-    "additionalDirectories": [
-      "~/Documents/0-Projects",
-      "~/Documents/1-Areas",
-      "~/Documents/2-Resources",
-      "~/Documents/3-Archive"
-    ],
     "allow": [
-      "Bash(~/Synergy/bin/*:*)",
+      "Bash(bin/*:*)",
       "Bash(git status*)",
       "Bash(git diff*)",
       "Bash(git log*)",
@@ -15,32 +9,23 @@
       "Bash(git commit*)",
       "Bash(mkdir*)",
       "Bash(ls*)",
-      "Read(~/Documents/0-Projects/**)",
-      "Read(~/Documents/1-Areas/**)",
-      "Read(~/Documents/2-Resources/**)",
-      "Read(~/Documents/3-Archive/**)",
-      "Edit(~/Documents/0-Projects/**)",
-      "Edit(~/Documents/1-Areas/**)",
-      "Edit(~/Documents/2-Resources/**)",
-      "Edit(~/Documents/3-Archive/**)",
-      "Read(~/Synergy/memory/**)",
-      "Edit(~/Synergy/memory/**)",
-      "Read(~/Synergy/esper/index.md)",
-      "Read(~/Synergy/esper/log.md)",
-      "Read(~/Synergy/esper/pages/**)",
-      "Edit(~/Synergy/esper/index.md)",
-      "Edit(~/Synergy/esper/log.md)",
-      "Edit(~/Synergy/esper/pages/topics/**)"
+      "Read(/memory/**)",
+      "Edit(/memory/**)",
+      "Read(/esper/index.md)",
+      "Read(/esper/log.md)",
+      "Read(/esper/pages/**)",
+      "Edit(/esper/index.md)",
+      "Edit(/esper/log.md)",
+      "Edit(/esper/pages/topics/**)"
     ],
     "deny": [
-      "Read(~/Synergy/esper/raw/**)",
-      "Read(~/Synergy/esper/_staging/**)",
-      "Edit(~/Synergy/esper/raw/**)",
-      "Edit(~/Synergy/esper/_staging/**)",
-      "Edit(~/Synergy/esper/sources/**)",
-      "Edit(~/Synergy/esper/pages/sources/**)"
+      "Read(/esper/raw/**)",
+      "Edit(/esper/raw/**)",
+      "Read(/esper/_staging/**)",
+      "Edit(/esper/_staging/**)",
+      "Edit(/esper/sources/**)",
+      "Edit(/esper/pages/sources/**)"
     ]
   },
-  "enabledPlugins": {
-  }
+  "enabledPlugins": {}
 }

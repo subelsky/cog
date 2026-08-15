@@ -1,0 +1,38 @@
+{
+  "permissions": {
+    "additionalDirectories": [],
+    "allow": [
+      "Read(/esper/**)",
+      "Edit(/esper/**)",
+      "Write(/esper/**)",
+      "Read(/.claude/commands/**)",
+      "Read(//sources/**)",
+      "Bash(echo:*)",
+      "Bash(ls:*)",
+      "Bash(mkdir:*)"
+    ],
+    "deny": [
+      "WebFetch",
+      "WebSearch",
+      "Bash(curl:*)",
+      "Bash(wget:*)",
+      "Bash(nc:*)",
+      "Bash(ssh:*)",
+      "Bash(scp:*)",
+      "Bash(sudo:*)",
+      "Bash(git push:*)",
+      "Bash(git remote:*)",
+      "Read(//home/vscode/.claude-raw/**)",
+      "Edit(//home/vscode/.claude-raw/**)",
+      "Write(//home/vscode/.claude-raw/**)",
+      "Read(//etc/**)",
+      "Edit(//etc/**)",
+      "Write(//etc/**)",
+      "Edit(//usr/**)",
+      "Write(//usr/**)"
+    ]
+  },
+  "enableAllProjectMcpServers": false,
+  "enabledMcpjsonServers": [],
+  "enabledPlugins": {}
+}

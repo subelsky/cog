@@ -1,8 +1,23 @@
+---
+name: history
+description: >
+  Deep memory search and recall — recursive search across all memory files,
+  piecing together a narrative from observations, entities, and action items.
+  Trigger on "what did I say about...", "when did we discuss...", "find that
+  conversation", "history of...".
+---
+
+# Cog History
+
 Use this skill for deep memory search and recall. Trigger if the user says "what did I say about...", "when did we discuss...", "find that conversation about...", "history of...", or asks about past information that needs multi-file search. For simple date/keyword lookups, a quick Grep suffices — this skill is for when you need to piece together a narrative from multiple entries.
 
 ## Domain
 
 Memory recall — recursive search across all memory files, cross-referencing observations, entities, and action items.
+
+## Memory Path
+
+All files under the resolved memory path: `$COG_HOME/memory/` if `COG_HOME` is set, otherwise `./memory/` at the project root. All `memory/...` references below are relative to this root. The L0 → L1 → L2 retrieval protocol is defined in the **cog skill**.
 
 ## Memory Files
 
@@ -21,7 +36,7 @@ Search across:
 ### Pass 1: Locate
 
 - Extract keywords from the user's query (names, topics, dates, phrases)
-- `Grep path="memory/" pattern="<keyword>"` for each keyword
+- Grep the resolved memory root for each keyword
 - Note which files matched and how many hits
 - If >10 files match, narrow by domain or add query terms
 - If 0 matches, try synonyms or related terms

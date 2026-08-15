@@ -16,7 +16,7 @@ Cog is your mind's working memory. It tracks who you are, what you're doing, wha
 - Entities (people, organizations, things you interact with)
 - Patterns Synergy has noticed across your conversations
 
-**When you're using Cog:** When you open Claude Code in the Synergy directory (`~/Documents/Synergy`). Cog is your productivity and personal organization console — you visit it intentionally to think, plan, reflect, and direct your life. It doesn't run in the background when you're coding in other repos.
+**When you're using Cog:** When you open Claude Code in the Synergy directory (`~/Synergy`). Cog is your productivity and personal organization console — you visit it intentionally to think, plan, reflect, and direct your life. It doesn't run in the background when you're coding in other repos.
 
 ### Esper — Your Knowledge Base (`esper/`)
 
@@ -56,12 +56,16 @@ You can invoke domain skills explicitly (`/personal`, `/trayverify`, etc.) or ju
 
 ### Feeding Esper
 
-Run `/integrate` in the devcontainer to process new sources. This is a batch operation — it finds everything new since the last run and processes it all.
+Run `/integrate` in the **raw-data container** to process new sources. This is a batch operation — it finds everything new since the last run and processes it all.
 
 ```
-# In the devcontainer (DEVCONTAINER=true required)
+# On the host: open the repo in the .devcontainer/ container
+# (VS Code "Reopen in Container", or: devcontainer up --workspace-folder .)
 /integrate
 ```
+
+`/integrate` refuses to run anywhere else. It is gated on `SYNERGY_RAW=1`, which only that
+container sets — see Security below.
 
 Synergy reads your new highlights, emails, articles, and transcripts. For each source, it creates a summary page, links it to relevant topics, and updates the index. Topics emerge automatically when 3+ sources share a theme.
 
@@ -100,12 +104,13 @@ This finds orphan pages, stale topics, missing cross-references, and suggests ne
 | `/podcast` | Cog | Creative Technology Field Notes | Podcast planning/production |
 | `/visibility` | Cog | Career strategy | Networking, portfolio, positioning |
 | `/website` | Cog | Personal site | Website design work |
-| `/integrate` | Esper | Ingest new sources | When you have new content to process (devcontainer only) |
+| `/cog` | Cog | Memory conventions, setup, add a domain | Bootstrapping or reconfiguring domains |
+| `/integrate` | Esper | Ingest new sources | When you have new content to process (raw-data container only) |
 | `/esper` | Esper | Query + lint | When you want to search your knowledge or health-check it |
-| `/housekeeping` | Both | Maintenance | Weekly — prunes, archives, audits links |
-| `/reflect` | Both | Self-improvement | Weekly — mines conversations, condenses patterns |
-| `/foresight` | Both | Strategic nudges | Daily — connects dots across domains |
-| `/evolve` | Cog | Architecture audit | Weekly — proposes system improvements |
+| `/housekeeping` | Both | Maintenance | Weekly — prunes, archives, sweeps expired facts, audits links |
+| `/reflect` | Both | Self-improvement | Weekly, right after housekeeping — mines conversations, consolidates patterns |
+| `/foresight` | Both | Strategic nudges | Weekly or on demand — connects dots across domains |
+| `/evolve` | Cog | Architecture audit | Monthly — proposes system improvements |
 | `/scenario` | Cog | Decision simulation | When facing a decision with multiple paths |
 | `/history` | Cog | Deep memory search | When trying to recall past conversations |
 | `/explainer` | - | Writing and explanation | When drafting content |
@@ -134,25 +139,38 @@ A quick decision tree for where information lives:
 
 ## The Pipeline
 
-These skills maintain the systems over time. Run them on a schedule or manually:
+These skills maintain the systems over time. **Run them consolidated — in one session, in order** — so later skills see what earlier ones cleaned.
 
-| Skill | Frequency | What it does |
-|-------|-----------|-------------|
-| `/foresight` | Daily (morning) | Reads both systems, surfaces one strategic nudge |
-| `/integrate` | As needed | Processes new sources into Esper (devcontainer) |
-| `/housekeeping` | Weekly | Archives old data, prunes hot memory, audits links, checks Esper health |
-| `/reflect` | Weekly | Mines recent conversations, condenses patterns, detects threads |
-| `/evolve` | Weekly | Audits the architecture itself, proposes improvements |
+| Pulse | Skills | Cadence | What it does |
+|-------|--------|---------|-------------|
+| Maintenance | `/housekeeping` then `/reflect` | Weekly | Archives, prunes, sweeps expired facts, rebuilds indexes — then mines conversations and consolidates patterns against the cleaned state |
+| Architecture | `/evolve` | Monthly | Audits the rules the other skills follow |
+| Strategic | `/foresight` | Weekly or on demand | Reads both systems, writes one nudge |
+| Ingestion | `/integrate` | As needed | Processes new sources into Esper (raw-data container) |
+
+Running everything nightly is theatrical — it generates reports nobody reads and re-logs the same
+issues without resolving them.
 
 ## Security
 
-`/integrate` processes semi-trusted content (emails, web articles) that could contain prompt injection. It runs in a locked-down devcontainer:
+`/integrate` processes untrusted content (emails, web articles, transcripts) that could carry prompt
+injection. It runs in a purpose-built container defined at `.devcontainer/`:
 
-- Requires `DEVCONTAINER=true` environment variable — won't run without it
-- Read-only access to your source files
-- Write access only to `esper/` — can't touch Cog, your home directory, or credentials
-- No network access, no shell commands
-- Two-phase processing: raw content is summarized first (extract), then the summary is filed (integrate) — prompt injections have to survive being summarized
+- **Requires `SYNERGY_RAW=1`** — set only by that container, and won't run without it. (The old
+  gate was `DEVCONTAINER=true`, which every devcontainer on the machine sets, so it was
+  effectively always open.)
+- **`memory/` is not mounted.** The sandbox cannot read your Cog memory at all — not read-only,
+  not at all.
+- Write access only to `esper/`. Source directories are mounted read-only.
+- Isolated Claude config and npm cache — never your host `~/.claude`, so nothing it writes can
+  persist a hook or skill that later runs on the host.
+- **Allowlisted network egress** (Anthropic API and npm registry), not zero network. Shell
+  commands *are* available inside the container; the boundary is the container itself.
+- Two-phase processing: raw content is summarized first (extract), then the summary is filed
+  (integrate) — a prompt injection has to survive being summarized.
+
+On the host, the reverse posture applies: `WebFetch`/`WebSearch` are denied and `esper/raw/` and
+`esper/_staging/` are unreadable, so untrusted text never meets your memory and your credentials.
 
 ## Synergy and Your Other Repos
 
@@ -168,7 +186,7 @@ The mental model:
 |---------------|-------------------|---------|
 | `~/Projects/trayverify/` | Repo code, repo CLAUDE.md | Write code, fix bugs |
 | `~/Projects/storyfield/` | Repo code, repo CLAUDE.md | Build the installation |
-| `~/Documents/Synergy/` | Cog + Esper + all domains | Think, plan, reflect, search |
+| `~/Synergy/` | Cog + Esper + all domains | Think, plan, reflect, search |
 
 **Synergy is your command center.** The other repos are where you do the work. You visit Synergy to zoom out — "how's TrayVerify going overall?", "what patterns am I seeing across my projects?", "what should I focus on this week?"
 
@@ -176,7 +194,7 @@ The mental model:
 
 1. **Cog is already running.** Every conversation with Synergy in this directory uses it.
 2. **Set up Esper** by creating the directory structure and your first source manifests.
-3. **Configure your devcontainer** with read-only mounts to your source directories.
+3. **Configure `.devcontainer/devcontainer.json`** with read-only mounts to your source directories.
 4. **Run `/integrate`** to process your first batch of sources.
 5. **Use `/esper`** to explore what Synergy found.
 6. **Set up the pipeline** — schedule `/foresight` daily and `/housekeeping` + `/reflect` weekly.

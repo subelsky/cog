@@ -1,3 +1,13 @@
+---
+name: commit
+description: >
+  Create a git commit with Conventional Commits format, selective staging, and
+  secret/artifact guard rails. Trigger on "commit", "save changes", "commit
+  this". Repo utility — not part of the core memory pipeline.
+---
+
+# Cog Commit
+
 Use this skill when the user wants to commit changes to git. Trigger if the user says "commit", "save changes", "commit this", or asks to create a git commit. Examples: "commit", "commit and push", "save my changes".
 
 ## Process
@@ -23,7 +33,7 @@ Use this skill when the user wants to commit changes to git. Trigger if the user
    - Scope is optional: `feat(whatsapp): add voice note transcription`
    - Subject line: imperative mood, lowercase, no period, under 72 chars
    - Body (if needed): blank line after subject, wrap at 72 chars, explain *why* not *what*
-   - Always end with: `Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>`
+   - If you are an AI agent, end with a co-author trailer identifying yourself, e.g. `Co-Authored-By: Claude <noreply@anthropic.com>` — use your actual model identity, don't hardcode someone else's
 
 5. **Commit** — Use a HEREDOC for the message to preserve formatting:
    ```
@@ -32,10 +42,12 @@ Use this skill when the user wants to commit changes to git. Trigger if the user
 
    Optional body explaining why.
 
-   Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
+   Co-Authored-By: <your agent identity> <noreply@anthropic.com>
    EOF
    )"
    ```
+
+   **In this container, GPG signing is unavailable and the user's signing key is not present.** Prefix with `git -c commit.gpgsign=false` so the commit doesn't fail. Never import keys or change global git config to work around it — the user signs on their host machine.
 
 6. **Verify** — Run `git status` after committing to confirm success. Show the resulting `git log --oneline -1`.
 

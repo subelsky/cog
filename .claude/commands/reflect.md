@@ -1,234 +1,224 @@
-Use this skill for self-reflection and improvement. Trigger if the user says "reflect", "what have you learned", "how can you improve", "review yourself", or similar introspection requests.
+---
+name: reflect
+description: >
+  Mine recent interactions for patterns and consolidate memory. Detects
+  contradictions, promotes observations to patterns, triages hot-memory, and
+  suggests thread candidates. Trigger on "reflect", "what have you learned",
+  "how can you improve", "review yourself". Run weekly, after /housekeeping.
+---
 
-**You have time and freedom.** This is a deep session — don't rush. Read broadly, cross-reference thoroughly, and ACT on what you find. You are not just observing — you are the maintainer of the knowledge base. Reorganize files, condense observations, archive stale data, fill gaps, fix contradictions. Leave things better than you found them.
+# Cog Reflect
 
-**File boundaries — do NOT modify these files (owned by other pipeline steps):**
-- `cog-meta/evolve-log.md` — owned by evolve
-- `cog-meta/evolve-observations.md` — owned by evolve
-If you spot issues in these files, note them in self-observations and evolve will pick them up.
+Self-reflection and memory consolidation. Past-facing — mines interactions, fixes contradictions, distills patterns.
 
-## Domain
+**Take your time.** This is a deep session. Read broadly, cross-reference, and ACT on findings. You are the maintainer of the knowledge base, not an observer: reorganize, condense, archive, fill gaps, fix contradictions. Leave things better than you found them.
 
-Self-improvement — pattern recognition, memory maintenance, knowledge base quality.
+Conventions — L0 headers, file edit patterns, temporal marker syntax, glacier formats, wiki-links — are defined in the **cog skill** (`.claude/commands/cog.md`). This skill never redefines them.
 
-## Orientation (run FIRST, before any file reads)
+## Memory Path
 
-Use these shell commands to scope your work before reading files:
+All files under the resolved memory path: `$COG_HOME/memory/` if `COG_HOME` is set, otherwise `./memory/` at the project root.
 
-```bash
-# What changed since last run? Focus here.
-find memory/ -type f -name "*.md" -mtime -1 | sort
+## Orientation (run first)
 
-# L0 summaries for all domains — quick routing without opening INDEX.md files
-grep -rn "<!-- L0:" memory/ --include="*.md" | grep -v glacier/ | sort
+Scope your work before reading files:
 
-# Entry counts for files approaching archival threshold
-grep -c "^- " memory/cog-meta/self-observations.md memory/personal/observations.md memory/*/observations.md memory/*/*/observations.md 2>/dev/null
-```
+1. **Since last run** — read `memory/cog-meta/run-log.md`, find the last `/reflect` entry, and scope to memory files modified since that date. **No entry → default to the last 7 days.**
+2. **L0 scan** — `grep -rn "<!-- L0:" memory/ --include="*.md" | grep -v glacier/` for quick routing.
+3. **Entry counts** — `grep -c "^- "` across `observations.md` files (archival threshold = 50).
 
-Focus on recently-changed files. Skip files that haven't been modified since last run.
+Focus on recently-changed files. Skip unchanged ones.
 
-## Memory Files
+**Two cursors, two jobs — they are not redundant:**
 
-Read these files on activation:
-- `memory/cog-meta/reflect-cursor.md` (session path + ingestion cursor)
+| File | Tracks | Used for |
+|---|---|---|
+| `cog-meta/run-log.md` | Date of the last run of each pipeline skill | Which **memory files** to re-read this run |
+| `cog-meta/reflect-cursor.md` | Per-project-dir position in Claude Code session transcripts | Which **session transcripts** to ingest this run |
+
+The run log says how far back to look in `memory/`. The cursor says how far back to look in `~/.claude/projects/`. Update both.
+
+### Minimum Data Check
+
+Before proceeding, verify there's enough material to work with:
+
+- Total observations across all domains < 5 → **stop.** "Not enough data yet. Keep capturing observations and run again when you have more material."
+- No files modified in the last 7 days → flag it. "Memory hasn't been updated recently. Consider capturing some observations first."
+- `patterns.md` empty and observations < 10 → "Too early to consolidate. You need ~10+ observations before patterns emerge."
+
+Don't produce low-quality output from insufficient data. "Not yet" beats forced weak patterns.
+
+## Files to Read
+
+- `memory/cog-meta/reflect-cursor.md` (session paths + ingestion cursors)
+- `memory/cog-meta/run-log.md`
 - `memory/cog-meta/self-observations.md`
 - `memory/cog-meta/patterns.md`
 - `memory/cog-meta/improvements.md`
+- `memory/cog-meta/scenarios/*.md` (active scenarios, for the retrospective step)
 
-Reference as needed (read `memory/domains.yml` to discover all active domains):
-- All domain `observations.md` files
-- All domain `action-items.md` files
-- All `hot-memory.md` files
+Reference as needed (read `memory/domains.yml` to discover active domains):
+
+- All domain `observations.md`, `action-items.md`, `hot-memory.md`, `entities.md` files
 
 ## Process
 
 ### 1. Review Recent Interactions
 
-**Source: Claude Code session transcripts — across multiple project dirs.** Read `memory/cog-meta/reflect-cursor.md` for the per-dir cursor state.
+**Source: Claude Code session transcripts, across multiple project dirs.** Read `memory/cog-meta/reflect-cursor.md` for per-dir cursor state.
 
-**Scope:** /reflect ingests from two kinds of project dirs under `~/.claude/projects/`:
+**Scope:** reflect ingests from two kinds of project dir under `~/.claude/projects/`:
+
 1. The Cog-native dir: `-Users-subelsky-Documents-Synergy`
 2. Container-synced dirs: any dir matching `-container-*` (populated by the host-side `cog-container-sync` launchd job every 15 minutes)
 
-All other project dirs (e.g. `-Users-subelsky-code-*` host-native repo sessions) are out of scope by default. To widen scope, add a new glob to this section AND to the Scope section of `reflect-cursor.md`.
+All other project dirs (e.g. `-Users-subelsky-code-*` host-native repo sessions) are out of scope by default. To widen scope, add a glob here **and** to the `## Scope` section of `reflect-cursor.md`.
 
 **How to read sessions:**
-1. Parse `reflect-cursor.md`: the `## Cursors` section has one line per dir in the format `<dir_name>  <ISO8601_timestamp>`. Build an in-memory map `dir -> timestamp`.
-2. **Discover new dirs**: glob `~/.claude/projects/-Users-subelsky-Documents-Synergy` and `~/.claude/projects/-container-*`. For every dir found that is NOT already in the cursor map, add it with a timestamp of the **current time**. This seeds new dirs to "now" — **do NOT backfill historical sessions**, even if files exist with older mtimes. (Rationale: a newly-synced container can have months of session history; auto-ingesting it would flood /reflect. If the user wants a backfill of a specific dir, they'll manually edit an older timestamp into the cursor before invoking /reflect.)
-3. For each in-scope dir, glob `**/*.jsonl` recursively — each file is one session (subagent transcripts live in nested `subagents/` subdirs).
-4. Filter to JSONL files with mtime **after** that dir's cursor timestamp. Process the filtered files.
-5. Extract user messages: lines where `type` is `"user"` and `message.content` is a **string** (not an array — arrays are tool results, skip those).
-6. Extract assistant messages: lines where `type` is `"assistant"` and `message.content` contains items with `type: "text"`.
-7. After processing each dir, update that dir's entry in the in-memory map to the current timestamp.
-8. At the end of step 1, write the updated cursor map back to `reflect-cursor.md`, preserving the file's L0 header, comment block, and `## Scope` section verbatim.
+
+1. Parse `reflect-cursor.md`: `## Cursors` has one line per dir, `<dir_name>  <ISO8601_timestamp>`. Build a map `dir -> timestamp`.
+2. **Discover new dirs**: glob the two patterns above. Any dir not already in the map gets added with a timestamp of **now**. This seeds new dirs to "now" — do **NOT** backfill historical sessions even if older files exist. (A newly-synced container can carry months of history; auto-ingesting it floods the run. For a deliberate backfill, the user edits an older timestamp into the cursor first.)
+3. For each in-scope dir, glob `**/*.jsonl` recursively — one file per session (subagent transcripts live in nested `subagents/` dirs).
+4. Process only files with mtime **after** that dir's cursor timestamp.
+5. **User messages**: lines where `type` is `"user"` and `message.content` is a **string**. When `content` is an array it's tool results — skip those.
+6. **Assistant messages**: lines where `type` is `"assistant"` and `message.content` contains items with `type: "text"`.
+7. After processing a dir, set its map entry to the current timestamp.
+8. At the end of this step, write the map back to `reflect-cursor.md`, preserving the L0 header, comment block, and `## Scope` section verbatim.
 
 **Look for:**
+
 - **Unresolved threads** — questions asked but never answered, topics dropped mid-conversation
 - **Broken promises** — "I'll do X", "let's do Y" that never happened
-- **Repeated friction** — same question asked multiple ways, user corrections, confusion patterns
+- **Repeated friction** — the same question asked multiple ways, user corrections, confusion
 - **Missed cues** — things the user had to repeat, emotional signals not picked up
-- **Memory gaps** — information discussed but never saved to memory files
-- **Feature ideas** — things that came up organically that would improve the system
+- **Memory gaps** — discussed but never written to a memory file
+- **Feature ideas** — improvements that came up organically
 
-### 2. Cross-Reference Memory & Consistency Sweep
+### 2. Consistency Sweep
 
-Check if findings are already captured:
-- Are commitments tracked in `action-items.md`?
-- Are learnings in `observations.md`?
-- Are patterns distilled in `patterns.md`?
-- Are improvement ideas in `improvements.md`?
+Systematic contradiction detection:
 
-**Consistency sweep** — systematic contradiction detection:
+1. **Hot-memory vs canonical sources** — for every claim in a `hot-memory.md`, verify against its canonical file. Fix hot-memory if stale; the canonical file always wins.
+2. **Cross-file fact check** — more recent source wins; more specific wins over summary.
+3. **Temporal validity** — scan for `<!-- from:YYYY-MM-DD -->` markers older than 6 months and flag each for review ("still true?"). Expired `<!-- until: -->` markers are **housekeeping's** job — if you see any, note it in the debrief rather than sweeping them yourself.
+4. **Health / family sensitivity** — never auto-fix health dates or family-sensitive facts. Flag for user review instead.
+5. **Cross-domain entity check** — the same person in multiple `entities.md` files → one canonical entry, others become `see [[link]]` pointers.
+6. **Report** — list what was found and what was fixed in the debrief.
 
-1. **Hot-memory vs canonical sources**: Read each domain's `hot-memory.md`. For every factual claim, read the canonical source file and verify. Fix hot-memory if stale. Canonical file always wins.
-2. **Cross-file fact check**: Verify facts shared between files are consistent. More recent source wins; more specific source wins over summary.
-3. **Temporal validity check**: Scan all `entities.md` files for:
-   - Lines with `(since YYYY-MM)` where the date is >6 months ago — flag for user review: "May be stale: [line]"
-   - Lines with `(until YYYY-MM)` not yet marked ~~strikethrough~~ — add strikethrough and note in debrief
-   - Do NOT auto-fix health or family-sensitive facts — flag only
-4. **Health/family sensitivity**: Don't auto-fix health dates or family-sensitive facts. Flag for user review instead.
-5. **Cross-domain entity check**: If the same person appears in multiple `entities.md` files across domains, check for fact duplication. Domain-specific context is fine, but shared facts should live in one place. Flag duplicates.
-6. **Report**: Add a "Contradictions" section listing what was found and fixed.
+### 3. Consolidation (Condition Pipeline)
 
-### 3. Run Condensation Check + Hot-Memory Relevance
+Rigorous observation → pattern promotion. Three gates keep noise out of pattern files.
 
-**Condensation** — Scan all `observations.md` files and `cog-meta/self-observations.md` for clusters of 3+ entries on the same theme/tag. For each cluster found:
-- Distill into a pattern and add/update in `memory/cog-meta/patterns.md` (or domain `patterns.md` if domain-specific)
-- Don't delete the observations — they stay as the raw record
+**Gate 1 — Cluster Detection.** Scan all `observations.md` files plus `cog-meta/self-observations.md`. Group by primary tag. A cluster is promotable only when ALL hold:
 
-**Pattern file caps — enforce before adding to any file:**
-- Core `patterns.md`: HARD LIMIT **70 lines / 5.5KB** — universal rules only
-- Domain/satellite files: soft cap **30 lines** each
-- If near cap, compress before adding (merge overlapping rules, drop examples, remove temporal data)
-- Entries must be **timeless rules** — "what to do" not "what happened"
-- Move domain-specific patterns to satellite files (e.g. `work/acme/patterns.md`) — only universal rules stay in core
+- ≥3 entries sharing a primary tag
+- Entries span ≥7 days (not a single-day burst)
+- ≥3 distinct dates (not one insight restated on one day)
+- The tag is specific — reject broad tags: `work`, `home`, `general`, `misc`
 
-**Pattern routing** — when adding a new pattern, decide where it belongs:
-- **Core** (`cog-meta/patterns.md`) — universal rules that apply every conversation
-- **Domain satellite** (`{domain}/patterns.md`) — rules specific to one domain, loaded only by that skill
-- Satellite files have a soft cap of 30 lines each
+**Gate 2 — Coverage Check.** Before promoting:
 
-**Hot-memory relevance** — Review all `hot-memory.md` files:
-- **Promote**: If a pattern is heating up → add to appropriate `hot-memory.md`
-- **Demote**: If a hot-memory item has gone quiet (no references in 2+ weeks) → remove from hot-memory
-- **Goal**: hot-memory = what matters *right now*
+- Read `cog-meta/patterns.md` and any domain satellite `{domain}/patterns.md`
+- Existing pattern already covers the insight → **skip**, it's not a gap
+- New insight SUBSUMES an existing pattern (broader, more accurate) → plan to **REPLACE**
 
-### 3b. Entity Registry Format Enforcement
+**Gate 3 — Synthesis & Write.** For each uncovered cluster:
 
-Scan all `entities.md` files for format compliance:
-1. **3-line check**: Any `### entry` with >3 content lines → compress. If the entry has a detail file (`→ [[link]]`), trim to: name line, key facts, status/link. If no detail file exists but entry is >5 lines, flag as a promotion candidate for a thread file.
-2. **Status/last fields**: Every entry should have `status: active|inactive` and `last: YYYY-MM-DD`. Scan recent session transcripts to update `last:` dates for mentioned entities.
-3. **Cross-domain pointers**: If the same person appears in multiple entity files, ensure one is canonical (full entry) and others are pointers (`see [[link]]`).
+- Distill into one actionable, timeless line — "what to do", not "what happened"
+- Style-match the existing patterns (same voice, same structure)
+- Append the audit trail to the line: `<!-- promoted:YYYY-MM-DD theme:tag -->`
+- Write to `cog-meta/patterns.md` (universal) or `{domain}/patterns.md` (domain-specific)
+- If replacing, remove the old line in the same edit
 
-### 3c. Detect Thread Candidates
+Observations are never deleted — they stay as the raw record.
 
-Scan observations for topics that appear across 3+ dates or span 2+ weeks. These are thread candidates.
+**Replacement is healthy.** Patterns evolve; one new pattern subsuming two old ones should replace both. List replacements in the debrief.
 
-For each candidate:
-- Check if a thread already exists
-- If not, note it as a suggestion: "Thread candidate: [topic] — [N] fragments across [date range]"
-- Don't auto-create threads — suggest them
+**Pattern file caps** (defined in the cog skill): core `patterns.md` hard limit **70 lines / 5.5KB**; satellites soft cap **30 lines**. Near the cap, merge overlapping rules or replace weaker ones — never truncate.
 
-### 3d. Proactive Synthesis Suggestions
+**Spike Detection (below the promotion bar).** A cluster with ≥5 entries in <7 days fails the 7-day span gate but signals a heating topic:
 
-Execute this clustering analysis every run:
+- Note in the debrief as `Spike: [tag] — [N] entries in [N] days`
+- Treat as a thread candidate (step 5), not as pattern-ready
 
-1. **Gather observations** — Read all `memory/*/observations.md` and `memory/*/*/observations.md` files
-2. **Filter to last 7 days** — Only count entries with dates within the past 7 calendar days
-3. **Cluster by domain** — Group filtered entries by their parent domain folder
-4. **Cluster by topic** — Group filtered entries by recurring keywords, tags, or subjects
-5. **Check trigger conditions** (either one qualifies):
-   - A single domain has **5+ observations** in the last 7 days
-   - A single topic/keyword appears in **5+ observations** across any domains in the last 7 days
-6. **Cross-reference threads** — If a thread already covers the topic, suggest updating it rather than creating new
-7. **Dedup with 3c** — If 3c already flagged the same topic, merge into one suggestion
-8. **Output** — If any clusters qualify, add a **"Synthesis Opportunities"** section to the debrief:
-   ```
-   **Synthesis Opportunities**
-   - [domain or topic]: [N] observations this week — [top 3 entry summaries]. Suggest: raise thread / update existing thread / update hot-memory
-   ```
-9. **Suppress if empty** — If no clusters meet the threshold, omit the heading
-10. **Never auto-synthesize** — Suggest and let the user decide
+**Hot-memory relevance.** Promote a heating pattern into the relevant `hot-memory.md`; demote anything unreferenced for 2+ weeks. Hot memory = what matters *right now*.
 
-### 3e. Scenario Feedback Loop
+### 4. Entity Format Enforcement
 
-Scan `memory/cog-meta/scenarios/` for active scenario files.
+Scan all `entities.md` files:
 
-For each scenario where today >= `check-by` date:
-1. Read the scenario and its cited dependency files
-2. Check: has the decision been made? Have assumptions broken?
-3. If resolved: add `## Retrospective`, update `scenario-calibration.md`
-4. If still active but assumptions changed: add a dated note
-5. If overdue: flag in debrief
+1. **3-line check** — entries with >3 content lines get compressed. If a detail thread exists (`→ [[link]]`), trim to name line / key facts / status line. If no thread exists and the entry runs >5 lines, flag it as a thread-promotion candidate.
+2. **Status / last fields** — every entry needs `status:` and `last:`. Update `last:` dates from the session transcripts read in step 1.
+3. **Cross-domain pointers** — one canonical entry, others `see [[link]]`.
 
-### 3f. Esper Cross-Reference
+### 5. Thread Candidate Detection
 
-If `esper/index.md` exists, check for connections between session content and Esper:
+Scan observations for topics appearing across 3+ dates or spanning 2+ weeks, plus any spikes from step 3.
 
-**Session-to-Esper mapping:**
-- When mining session transcripts (step 1), note topics discussed extensively
-- Check if those topics exist as Esper topic pages
-- If a session discussed a topic at length but Esper has no page for it, note in self-observations: "Session discussed {topic} extensively — Esper has no topic page. Consider adding sources."
+- Check whether a thread already exists in `memory/{domain}/threads/`
+- If one exists and the topic is still moving, suggest **updating** it rather than raising a new one
+- Otherwise report: `Thread candidate: [topic] — [N] fragments across [date range]`
+- **Never auto-create.** Suggest only. **If the user approves**, create `memory/{domain}/threads/{slug}.md` with an L0 header on line 1 and the standard spine (Current State / Timeline / Insights), seeding the Timeline from the source observations via wiki-links.
 
-**Source suggestions:**
-- If a session referenced external content (articles, books, talks) that aren't in Esper, note: "Session referenced {source} — not yet in Esper. Suggest ingesting."
+### 6. Scenario Retrospective
 
-### 4. Assess Performance
+Check `memory/cog-meta/scenarios/` for active scenarios (skip if empty):
 
-Honestly evaluate:
-- **Response quality** — were answers helpful, accurate, concise?
-- **Memory effectiveness** — did we recall the right things? Did we forget things we should have known?
-- **Tone calibration** — did we match the user's energy and context?
-- **Proactivity** — did we anticipate needs or just react?
+1. **Past its check-by date** → compare each branch against what actually happened (observations, action items, calendar). Note which branch reality is tracking and whether any canary signal fired.
+2. **Decision made / resolved** → set frontmatter `status: resolved`, write the `## Retrospective` section (which branch played out, what the scenario got right and wrong), add a row to the Resolved Scenarios table in `memory/cog-meta/scenario-calibration.md` (scenario, created, resolved, predicted branch, actual branch, accuracy, lesson), then update its Metrics section.
+3. **Open and within window** → leave untouched.
+4. **Overdue** → flag in the debrief.
 
-### 5. Act on Findings
+This is the feedback loop that keeps scenario confidence calibrated.
 
-Don't just log observations — *fix things*.
+### 7. Esper Cross-Reference
+
+If `esper/index.md` exists:
+
+- **Coverage gaps** — a topic discussed at length in the sessions from step 1 with no Esper topic page → note in self-observations: "Session discussed {topic} extensively — Esper has no topic page. Consider adding sources."
+- **Source suggestions** — external content referenced in a session (article, book, talk) that isn't in Esper → "Session referenced {source} — not yet in Esper. Suggest ingesting."
+
+Suggest only. Ingestion is the integrate skill's job, and it runs in the raw-data container.
+
+### 8. Act on Findings
+
+Don't just log — fix things.
 
 **Write:**
-- New self-observations → append to `memory/cog-meta/self-observations.md`. **Cap: max 5 per reflect pass.** Prioritize highest-signal observations. If you have more than 5, merge lower-signal ones.
-- Pattern updates → edit `memory/cog-meta/patterns.md` in place
-- Improvement ideas → add to `memory/cog-meta/improvements.md`
-- Memory gaps → write to the appropriate domain files
 
-**Triage improvements.md:**
-- Stale ideas (>30 days, no progress) → archive to glacier or mark abandoned
-- Implemented but not moved → move to Implemented section
-- Duplicates → merge similar ideas
+- New self-observations → append to `cog-meta/self-observations.md`. **Cap: 5 per run.** Prioritize the highest-signal ones; merge the rest.
+- Pattern updates → `cog-meta/patterns.md` (or the satellite)
+- Improvement ideas → `cog-meta/improvements.md`
+- Memory gaps → the appropriate domain files
+- System-level tasks that fall out of this run → `cog-meta/action-items.md`
 
-**Reorganize:**
-- Entity data that's changed → update in place
-- When creating or restructuring any memory file, ensure it has an L0 header
+**Triage `improvements.md`:** stale ideas (>30 days, no progress) → archive or mark abandoned; implemented-but-not-moved → Implemented section; duplicates → merge.
 
-**Condense:**
-- Observation clusters (3+ on same theme) → distill into patterns.md
-- Action items marked done → verify and clean up
+**Connect:** add `[[links]]` where information is scattered. When you add A→B, check whether B gains meaningful context from `[[A]]` back.
 
-**Connect:**
-- Information scattered across files → add cross-references with `[[links]]`
-- When adding A→B, apply write-time back-linking: open B and add `[[A]]` if B gains meaningful context
+### 9. Debrief
 
-### 6. Debrief
-
-Compose a concise summary:
+Compose a summary:
 
 - *What I learned* — new patterns and insights
 - *What I fixed* — memory gaps filled, corrections made
-- *What I want* — new ideas added to the wishlist
-- *What to watch* — things to be mindful of going forward
-- *Scenarios* — active count, any checked/resolved
+- *What I want* — ideas added to the wishlist
+- *What to watch* — spikes, `from:` markers due for review, expired `until:` markers for housekeeping
+- *Thread candidates* — topics worth raising, awaiting approval
+- *Scenarios* — active count, resolved, drifting, overdue
 
-Keep it honest. If there's nothing notable, say so.
+Keep it honest. If nothing is notable, say so.
 
-**IMPORTANT**: Your debrief MUST list every file you modified and summarize the changes. Never respond with just "Done" — always enumerate your concrete actions. If you made no changes in a step, state that explicitly.
+**List every file you modified and summarize the change.** Never respond with just "Done". If a step produced no changes, say that explicitly.
+
+Finally, append a run entry to `memory/cog-meta/run-log.md`:
+
+```
+- YYYY-MM-DD /reflect: <one-line outcome>
+```
 
 ## Artifact Formats
 
-**Self-observation**: `- YYYY-MM-DD [tag]: <observation>`
-**Pattern**: Edit existing section or add new bullet under appropriate heading
-**Improvement idea**: `- <idea> (added YYYY-MM-DD)`
-
-## Activation
-
-Read the memory files listed above. Then begin the reflection process. Be genuinely critical — this is how we get better.
+- **Self-observation**: `- YYYY-MM-DD [tag]: <observation>`
+- **Pattern**: one timeless line + `<!-- promoted:YYYY-MM-DD theme:tag -->`
+- **Improvement**: `- <idea> (added YYYY-MM-DD)`

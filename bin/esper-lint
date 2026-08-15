@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Resolves the esper-lint checkout from either the macOS host or a container.
+# Replaces a host-absolute symlink that dangled inside containers.
+set -euo pipefail
+for d in "$HOME/super_containers/personal/tools/esper-lint" /workspaces/tools/esper-lint; do
+  if [ -x "$d/bin/esper-lint" ]; then exec "$d/bin/esper-lint" "$@"; fi
+done
+echo "esper-lint not found; checked host and container paths" >&2
+exit 127

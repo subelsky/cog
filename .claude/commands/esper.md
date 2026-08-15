@@ -1,3 +1,13 @@
+---
+name: esper
+description: >
+  Query or health-check the Esper knowledge base. Trigger on "esper", "what do
+  I know about", "search esper", "esper lint", "knowledge check". Runs
+  anywhere — it reads only LLM-authored summary pages.
+---
+
+# Esper
+
 Use this skill to query or health-check the Esper knowledge base. Trigger if the user says "esper", "what do I know about", "search esper", "esper lint", "knowledge check", or similar query/maintenance requests.
 
 ## Domain
@@ -13,16 +23,18 @@ Esper knowledge base — query and maintenance.
 
 ## Tooling — `bin/esper-lint`
 
-A deterministic Ruby CLI handles all data-gathering and safe fixes. **Use it instead of writing inline grep/awk/python.** Permission-allowlisted; runs without prompts.
+A deterministic Ruby CLI handles all data-gathering. **Use it instead of writing inline grep/awk/python.** Permission-allowlisted; runs without prompts.
+
+**It is READ-ONLY — no subcommand writes to disk.** Every fix is yours to make with `Edit`.
 
 JSON-only output on stdout. Pipe to `jq` or `python3 -c` for parsing. JSONL warnings on stderr (filter or save with `2>/tmp/warnings`).
 
 Commands you'll use:
 
 ```
-bin/esper-lint check                                  # all 7 lint checks (lint mode entrypoint)
-bin/esper-lint fix                                    # bump source_counts + dedup + rebuild index
-                                                      # requires clean esper/ git tree
+bin/esper-lint check                                  # all 7 lint checks, counts only (lint mode entrypoint)
+bin/esper-lint check --detail CHECK                   # also return items[] for ONE check, by its key under "checks"
+bin/esper-lint check --detail CHECK --limit N         # cap returned items (default 50); sets items_truncated
 bin/esper-lint sources --orphan [--fixable]           # list orphans; --fixable narrows to ones tagged with an existing topic
 bin/esper-lint sources --tag TAG                      # all sources tagged TAG
 bin/esper-lint sources --topic SLUG                   # all sources linked from a topic page
@@ -30,17 +42,23 @@ bin/esper-lint topics --count-mismatch                # frontmatter source_count
 bin/esper-lint topics --missing-connections           # topic pages without ## Connections
 bin/esper-lint tags --missing-page                    # tags >= 3 occurrences with no topic page
 bin/esper-lint manifests --stale                      # manifests with null/old cursors
-bin/esper-lint add-source TOPIC_SLUG SOURCE_SLUG      # add link to a topic's Sources (sort, dedup, bump count)
 ```
 
-Exit codes: `0` = success, `1` = `check` found findings, `2` = error (missing dir, dirty tree on `fix`, unknown topic/source, etc.).
+Check keys for `--detail`: `orphans`, `source_count_mismatches`, `missing_topic_candidates`, `missing_connections`, `stale_manifests`, `index_drift`, `duplicate_sources`.
+
+Global options: `--esper-dir PATH` (default `./esper`), `--tag-threshold N` (default 3), `--stale-days N` (default 30).
+
+Exit codes: `0` = success, `1` = `check` found findings, `2` = error (missing dir, malformed frontmatter, unknown `--detail` name, bad argument).
+
+When you need the actual items, prefer a query subcommand (`sources` / `topics` / `tags` / `manifests`) over raising `--limit` — they filter on their own flags and return full `results`.
 
 What the CLI does NOT do — these stay your job:
-- Decide which topic an orphan belongs to (read tags, read source's Key Takeaways, judge)
+- Decide which topic an orphan belongs to (read tags, read the source's Key Takeaways, judge)
 - Decide whether a missing-topic candidate should be promoted, subsumed, or ignored
 - Add or update `## Connections` sections (semantic; hand-edit)
 - Rewrite topic syntheses (LLM work; dispatch synthesis-refresh subagents per the prior pattern)
-- Re-run integrate for stale manifests (separate skill)
+- Re-run integrate for stale manifests (separate skill, raw-data container only)
+- Write anything at all — see Fixing below
 
 ## Memory Files
 
@@ -101,40 +119,26 @@ When the user asks a question about their knowledge:
 
 4. **Present findings to the user** with recommended next actions, ranked by impact.
 
-### Fixing — what the CLI handles vs. what you do
+### Fixing
 
-**Run `bin/esper-lint fix`** for the deterministic safe fixes:
-- Bumps `source_count` in topic frontmatter to match actual unique link count
-- Deduplicates `## Sources` entries (sorts alphabetically, removes duplicates)
-- Rebuilds `esper/index.md` from current topic state
-- Atomic; refuses to run if `git status --porcelain esper/` is non-empty
-- Returns a `post_fix_check` payload showing the residual lint state
+**Every fix is a hand-edit with the `Edit` tool.** The CLI finds problems; it never writes.
 
-**Use `bin/esper-lint add-source TOPIC SOURCE_SLUG`** for each fixable orphan you decide should be linked. Idempotent (returns `was_already_present: true` if already there).
+- **`source_count` mismatches** — read the topic page, count the unique links under `## Sources`, and edit the frontmatter `source_count` to match.
+- **Duplicate `## Sources` entries** — remove the duplicate lines and keep the list alphabetically sorted.
+- **Index drift** — bring the row in `esper/index.md` back in line with the topic page it describes.
+- **Orphan sources** — decide the right topic (judgment), then add the link to that topic's `## Sources` and bump its `source_count` in the same edit.
+- **Missing `## Connections`** — write the section; it's semantic work.
+- **Missing-topic candidates** — promote to a new topic page, subsume into an existing one, or ignore. Case by case.
+- **Stale syntheses** — dispatch synthesis-refresh subagents per the established pattern (see `docs/superpowers/specs/2026-05-05-esper-lint-design.md`).
+- **Stale manifests** — not fixable here; they need an integrate run in the raw-data container.
 
-**Hand-edit when:**
-- Adding/updating `## Connections` sections (judgment-driven)
-- Promoting a missing-topic candidate to a real topic page (write the file, then `bin/esper-lint fix` rebuilds the index)
-- Subsuming a candidate into an existing topic (no edit needed; just note in log.md)
-- Refreshing stale syntheses (dispatch synthesis-refresh subagents per the established pattern — see `docs/superpowers/specs/2026-05-05-esper-lint-design.md` for context)
-
-### Auto-fix protocol
-
-After presenting findings, offer specific actions in this order (cheapest first):
-
-1. **"Run `bin/esper-lint fix`?"** — clears all source_count mismatches, duplicate Sources entries, and index drift in one shot. Always offer first if any of these checks have findings.
-2. **"Link the N fixable orphans?"** — call `bin/esper-lint add-source` per source × matching topic. Confirm the topic for each before linking.
-3. **"Promote/subsume the missing-topic candidates?"** — case-by-case judgment.
-4. **"Refresh stale syntheses on the top-N high-volume topics?"** — dispatch synthesis-refresh subagents.
-5. **"Add `## Connections` to the N topics missing one?"** — hand-edit per topic.
-
-Only fix with user approval. Always report what was fixed in `esper/log.md`.
+Order the offers cheapest-first when presenting them: counts and duplicates, then orphan links, then topic promotion, then synthesis refreshes and `## Connections`. Only fix with user approval, re-run `bin/esper-lint check` afterward to confirm the finding cleared, and record what changed in `esper/log.md`.
 
 ### Known caveats
 
-- **`fix` requires the esper directory to be in a git repo** with a clean working tree. Esper has its own git repo at `esper/.git`. Always run `cd esper && git status` before `fix`. If dirty, ask the user whether to commit/stash first.
 - **Manifest cursor `kind`**: as of esper-lint v0.2.0, manifests with `cursor.kind: opaque` (e.g. `instapaper.yaml`'s slug-based cursor) are treated as fresh by design — no age computation, no staleness flag while the value is non-null. Date-kind manifests behave as before.
 - **The CLI does not check `## Connections` content** — only the section's presence. Cross-reference quality remains a judgment call.
+- **`esper/` is its own git repo** (`esper/.git`). Hand-edits land there, not in the Synergy repo — commit them separately.
 
 ---
 

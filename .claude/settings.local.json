@@ -1,8 +1,22 @@
 {
   "permissions": {
+    "additionalDirectories": [
+      "~/Documents/0-Projects",
+      "~/Documents/1-Areas",
+      "~/Documents/2-Resources",
+      "~/Documents/3-Archive"
+    ],
     "allow": [
-      "Edit(/Users/subelsky/Synergy/**)",
-      "Write(/Users/subelsky/Synergy/**)",
+      "Edit(/**)",
+      "Write(/**)",
+      "Read(~/Documents/0-Projects/**)",
+      "Read(~/Documents/1-Areas/**)",
+      "Read(~/Documents/2-Resources/**)",
+      "Read(~/Documents/3-Archive/**)",
+      "Edit(~/Documents/0-Projects/**)",
+      "Edit(~/Documents/1-Areas/**)",
+      "Edit(~/Documents/2-Resources/**)",
+      "Edit(~/Documents/3-Archive/**)",
       "Bash(git:*)",
       "Bash(gh:*)",
       "Bash(grep:*)",
@@ -23,27 +37,38 @@
       "Bash(du:*)",
       "Bash(diff:*)",
       "Bash(container --help)",
+      "Bash(container ls *)",
       "mcp__things__*",
       "mcp__apple-events__calendar_events",
       "Bash(claude --version)",
-      "Bash(container ls *)",
       "Bash(today *)",
-      "Bash(~/Synergy/bin/today *)",
       "Bash(bundle install *)",
       "Bash(bundle exec *)",
-      "Bash(echo \"exit=$?\")",
       "Bash(ruby -v)",
-      "Bash(/Users/subelsky/Synergy/bin/esper-lint version *)"
+      "Bash(rake test*)",
+      "Bash(echo \"exit=$?\")",
+      "Bash(echo \"EXIT: $?\")",
+      "Read(//private/tmp/**)"
     ],
     "deny": [
       "WebFetch",
       "WebSearch",
-      "Read(/Users/subelsky/.ssh/**)",
-      "Read(/Users/subelsky/.aws/**)",
-      "Read(/Users/subelsky/.gnupg/**)",
-      "Read(/Users/subelsky/.config/gh/**)",
-      "Read(/Users/subelsky/Library/Keychains/**)",
-      "Read(/Users/subelsky/Library/Application Support/**)",
+      "Read(~/.ssh/**)",
+      "Read(~/.aws/**)",
+      "Read(~/.gnupg/**)",
+      "Read(~/.config/gh/**)",
+      "Read(~/Library/Keychains/**)",
+      "Read(~/Library/Application Support/**)",
+      "Write(~/.ssh/**)",
+      "Write(~/.aws/**)",
+      "Write(~/.gnupg/**)",
+      "Write(~/Library/**)",
+      "Edit(~/.ssh/**)",
+      "Edit(~/.aws/**)",
+      "Edit(~/.gnupg/**)",
+      "Read(//etc/**)",
+      "Write(//etc/**)",
+      "Edit(//etc/**)",
       "Bash(rm -rf:*)",
       "Bash(rm -rf /)",
       "Bash(rm -rf ~)",
@@ -68,16 +93,10 @@
       "Bash(gh gist create:*)",
       "Bash(gh repo create:*)",
       "Bash(gh api /user/keys:*)",
-      "Bash(gh api user/keys:*)",
-      "Write(/Users/subelsky/.ssh/**)",
-      "Write(/Users/subelsky/.aws/**)",
-      "Write(/Users/subelsky/.gnupg/**)",
-      "Write(/Users/subelsky/Library/**)",
-      "Write(/etc/**)",
-      "Edit(/Users/subelsky/.ssh/**)",
-      "Edit(/Users/subelsky/.aws/**)",
-      "Edit(/Users/subelsky/.gnupg/**)",
-      "Edit(/etc/**)"
+      "Bash(gh api user/keys:*)"
     ]
-  }
+  },
+  "enabledMcpjsonServers": [
+    "apple-events"
+  ]
 }

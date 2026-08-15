@@ -24,6 +24,7 @@ dist/
 # Bin: tracked as a directory via .gitkeep; symlinks are personal
 bin/*
 !bin/.gitkeep
+!bin/esper-lint
 
 # PARA convenience symlinks (point to ~/Documents/{0..3}-*)
 /Projects
