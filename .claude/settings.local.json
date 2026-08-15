@@ -1,11 +1,5 @@
 {
   "permissions": {
-    "additionalDirectories": [
-      "~/Documents/0-Projects",
-      "~/Documents/1-Areas",
-      "~/Documents/2-Resources",
-      "~/Documents/3-Archive"
-    ],
     "allow": [
       "Edit(/**)",
       "Write(/**)",
@@ -48,7 +42,8 @@
       "Bash(rake test*)",
       "Bash(echo \"exit=$?\")",
       "Bash(echo \"EXIT: $?\")",
-      "Read(//private/tmp/**)"
+      "Read(//private/tmp/**)",
+      "Bash(devcontainer --version)"
     ],
     "deny": [
       "WebFetch",
@@ -94,6 +89,12 @@
       "Bash(gh repo create:*)",
       "Bash(gh api /user/keys:*)",
       "Bash(gh api user/keys:*)"
+    ],
+    "additionalDirectories": [
+      "~/Documents/0-Projects",
+      "~/Documents/1-Areas",
+      "~/Documents/2-Resources",
+      "~/Documents/3-Archive"
     ]
   },
   "enabledMcpjsonServers": [
