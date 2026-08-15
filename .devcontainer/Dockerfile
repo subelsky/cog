@@ -105,8 +105,10 @@ USER ${USERNAME}
 RUN npm install -g @anthropic-ai/claude-code \
     && npm cache clean --force
 
-# esper/ is its own git repo and arrives as a bind mount; ownership may not match.
-RUN git config --global --add safe.directory /workspaces/Synergy/esper
+# esper/.git is shadowed by a read-only tmpfs at runtime (see devcontainer.json),
+# so git cannot operate on esper/ in here at all. That is intentional: the host
+# owns git for esper/, and a writable .git is a path back out to the host.
+# No safe.directory entry is needed or wanted.
 
 USER root
 # Matches workspaceFolder in devcontainer.json, so a bare `docker exec` lands in

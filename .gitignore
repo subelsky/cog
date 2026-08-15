@@ -17,6 +17,13 @@ Thumbs.db
 memory/
 esper/
 
+# Retired container (superseded by .devcontainer/). Tracked files are deleted;
+# what remains on disk is ignored container state — claude-home/ holds the old
+# container's Claude CREDENTIALS and session transcripts, and .gitconfig-host is
+# a copy of ~/.gitconfig. This entry lives here, rather than in the directory's
+# own .gitignore, so deleting that file cannot make the residue stageable.
+clean_room/
+
 # Node (if any tooling is added later)
 node_modules/
 dist/

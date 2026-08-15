@@ -4,10 +4,13 @@ A locked-down devcontainer for running Synergy's `/integrate` skill, which turns
 untrusted sources (scraped articles, exported email, highlights, transcripts)
 into the Esper knowledge base.
 
-It replaces `clean_room/`, which required macOS and the Apple Container CLI and
+It replaced `clean_room/`, which required macOS and the Apple Container CLI and
 therefore could not be launched from the place the work actually happens. This
 one is a standard devcontainer: VS Code "Reopen in Container", the `devcontainer`
 CLI, or plain `docker`.
+
+`clean_room/` has since been retired and deleted; its files are in git history if
+you ever need them back.
 
 ## Threat model
 
@@ -24,6 +27,7 @@ other two.
 `clean_room/` mounted the whole Synergy root read-only, which included `memory/`
 — private data present but flagged read-only. Read-only does not help against
 exfiltration: reading is the attack. This container does not mount it at all.
+That difference is why it was retired rather than kept as a fallback.
 
 Because the container has no writable access to any host state that Claude Code
 reads on the host, a prompt injection inside the sandbox cannot persist a hook,
@@ -47,6 +51,7 @@ Everything the container can see from the host, in full:
 | Host path | Container path | Access |
 |---|---|---|
 | `<repo>/esper` | `/workspaces/Synergy/esper` | **read-write** — the only writable host path |
+| *(nothing — tmpfs)* | `/workspaces/Synergy/esper/.git` | read-only empty dir, shadows the host's `.git` |
 | `<repo>/.claude/commands` | `/workspaces/Synergy/.claude/commands` | read-only |
 | `<repo>/.devcontainer/CLAUDE.md` | `/workspaces/Synergy/CLAUDE.md` | read-only |
 | volume `synergy-raw-claude-config` | `/home/vscode/.claude-raw` | read-write (not a host dir) |
@@ -73,9 +78,9 @@ override and let the default repo-root mount come back.
 
 ### Source mounts
 
-`clean_room/sources.conf` was entirely commented out, so nothing was lost in the
-move; the equivalent commented entries now live in `devcontainer.json` under
-`mounts`, expressed with `${localEnv:HOME}` so the file stays portable.
+The old `clean_room/sources.conf` was entirely commented out, so nothing was lost
+in the move; the equivalent commented entries now live in `devcontainer.json`
+under `mounts`, expressed with `${localEnv:HOME}` so the file stays portable.
 
 Uncomment the ones you use and fix the paths — a bind mount whose host source
 does not exist prevents the container from starting. All source mounts are
@@ -185,6 +190,8 @@ devcontainer exec --workspace-folder ~/Synergy bash -lc '
   ls -ld /workspaces/Synergy/esper                # exists, writable
   touch /workspaces/Synergy/esper/.write-probe && rm /workspaces/Synergy/esper/.write-probe && echo "esper writable"
   touch /workspaces/Synergy/.claude/commands/probe 2>&1   # must fail: Read-only file system
+  touch /workspaces/Synergy/esper/.git/probe 2>&1         # must fail: Read-only file system
+  ls -a /workspaces/Synergy/esper/.git                    # must be empty (tmpfs shadow)
   echo "$CLAUDE_CONFIG_DIR"                       # /home/vscode/.claude-raw
   getent hosts api.anthropic.com  && echo "anthropic resolves"
   getent hosts example.com        && echo "LEAK: example.com resolved" || echo "example.com blocked"
@@ -210,15 +217,19 @@ refuse in the personal supercontainer.
   work unconditionally, add `update.code.visualstudio.com` and `*.vscode-cdn.net`
   to `ALLOWED_DOMAINS` — and accept the wider allowlist.
 - **`curl`/`wget` are present** (they ship with the devcontainers base image and
-  removing them breaks parts of it). `clean_room` purged `curl`. They are
+  removing them breaks parts of it). The old `clean_room` purged `curl`. They are
   neutered by the egress allowlist and denied in the container's settings, but
   the binaries exist.
 - **INPUT is default-DROP** with loopback and established connections only. The
   host network is not blanket-allowed, unlike the stock Claude Code devcontainer
   firewall. If some tooling needs to reach into the container over TCP, that is
   the rule to revisit.
-- **No git identity or credentials** are mounted. Committing `esper/` is the
-  host's job.
+- **No git identity or credentials** are mounted, and `esper/.git` is shadowed by
+  a read-only tmpfs, so git does not function in here at all. Committing `esper/`
+  is the host's job. Without the shadow, a writable `esper/.git` would be a
+  container -> host code execution path: an injected `.git/hooks/post-checkout`
+  or a `core.pager` entry in `.git/config` runs on the **host**, with full user
+  privileges, the next time you use git in `~/Synergy/esper`.
 - **`CLAUDE.md` is a single-file bind mount.** Editors that replace the file
   rather than rewrite it in place will leave the container looking at the old
   inode; restart the container after editing `.devcontainer/CLAUDE.md`.

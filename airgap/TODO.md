@@ -1,5 +1,10 @@
 # airgap — disposable web-research container
 
+> **Note:** `clean_room/` has been retired and deleted — it was superseded by
+> `.devcontainer/`, which does not mount `memory/` at all. Every reference to
+> `clean_room` below is historical; read it as `.devcontainer/` (Dockerfile,
+> `init-firewall.sh`) or recover the original files from git history.
+
 Sibling to `clean_room/`. Opposite tradeoff: `clean_room` is locked-down execution sandbox for
 running untrusted code with broad filesystem-but-no-network access; `airgap` is a
 broad-network-but-no-host container for doing web research without giving the host Claude

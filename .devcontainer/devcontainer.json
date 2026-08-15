@@ -50,7 +50,22 @@
     "source=synergy-raw-claude-config,target=/home/vscode/.claude-raw,type=volume",
 
     // Isolated npm cache — NOT the host's ~/.npm.
-    "source=synergy-raw-npm-cache,target=/home/vscode/.npm,type=volume"
+    "source=synergy-raw-npm-cache,target=/home/vscode/.npm,type=volume",
+
+    // Shadow the host's esper/.git with an empty tmpfs.
+    //
+    // The esper bind above is read-write, which means it also exposes esper/.git
+    // read-write. That is a container -> host code execution path: a prompt
+    // injection can drop an executable esper/.git/hooks/post-checkout (or set
+    // core.pager / core.fsmonitor in esper/.git/config), and the next time git
+    // runs in ~/Synergy/esper ON THE HOST it executes with full user privileges
+    // — outside the container, outside the firewall, next to memory/.
+    //
+    // The container has no legitimate use for .git: CLAUDE.md forbids committing
+    // and pushing, and the host owns git for esper/. Shadowing it costs nothing
+    // and closes the path. Ordering is by destination depth, so this lands on
+    // top of the esper mount.
+    "target=/workspaces/Synergy/esper/.git,type=tmpfs,readonly"
 
     // ------------------------------------------------------------------------
     // Source mounts — all read-only, all under /sources.
