@@ -46,9 +46,9 @@ Everything the container can see from the host, in full:
 
 | Host path | Container path | Access |
 |---|---|---|
-| `<repo>/esper` | `/workspace/esper` | **read-write** — the only writable host path |
-| `<repo>/.claude/commands` | `/workspace/.claude/commands` | read-only |
-| `<repo>/.devcontainer/CLAUDE.md` | `/workspace/CLAUDE.md` | read-only |
+| `<repo>/esper` | `/workspaces/Synergy/esper` | **read-write** — the only writable host path |
+| `<repo>/.claude/commands` | `/workspaces/Synergy/.claude/commands` | read-only |
+| `<repo>/.devcontainer/CLAUDE.md` | `/workspaces/Synergy/CLAUDE.md` | read-only |
 | volume `synergy-raw-claude-config` | `/home/vscode/.claude-raw` | read-write (not a host dir) |
 | volume `synergy-raw-npm-cache` | `/home/vscode/.npm` | read-write (not a host dir) |
 | optional, commented in `devcontainer.json` | `/sources/*` | read-only |
@@ -58,8 +58,11 @@ Everything the container can see from the host, in full:
 `.claude/settings.json`, `.claude/settings.local.json`, `.mcp.json`,
 `.devcontainer/` itself.
 
-`/workspace` itself is the image's own directory in the container layer. It is
-writable but invisible to the host and discarded on rebuild.
+`/workspaces/Synergy` itself is the image's own directory in the container layer.
+It is writable but invisible to the host and discarded on rebuild. The name
+matches the `/workspaces/<repo>` convention used by the personal and work
+supercontainers so a shell lands in a predictable place — it does **not** mean
+the repo root is mounted there. Only the three rows above are present under it.
 
 `workspaceMount` in `devcontainer.json` is overridden to point at `esper/`
 precisely so the default (mount the whole workspace folder) never happens. If a
@@ -177,16 +180,17 @@ is inside it.
 ```bash
 devcontainer exec --workspace-folder ~/Synergy bash -lc '
   echo "SYNERGY_RAW=$SYNERGY_RAW"                 # must print 1
-  ls /workspace/memory                            # must fail: No such file or directory
-  ls -ld /workspace/esper                         # exists, writable
-  touch /workspace/esper/.write-probe && rm /workspace/esper/.write-probe && echo "esper writable"
-  touch /workspace/.claude/commands/probe 2>&1    # must fail: Read-only file system
+  pwd                                             # must print /workspaces/Synergy
+  ls /workspaces/Synergy/memory                   # must fail: No such file or directory
+  ls -ld /workspaces/Synergy/esper                # exists, writable
+  touch /workspaces/Synergy/esper/.write-probe && rm /workspaces/Synergy/esper/.write-probe && echo "esper writable"
+  touch /workspaces/Synergy/.claude/commands/probe 2>&1   # must fail: Read-only file system
   echo "$CLAUDE_CONFIG_DIR"                       # /home/vscode/.claude-raw
   getent hosts api.anthropic.com  && echo "anthropic resolves"
   getent hosts example.com        && echo "LEAK: example.com resolved" || echo "example.com blocked"
   getent hosts github.com         && echo "LEAK: github.com resolved"  || echo "github blocked"
   sudo iptables -F 2>&1           # must fail: sudo not permitted
-  head -3 /workspace/CLAUDE.md                    # the container CLAUDE.md, not the repo one
+  head -3 /workspaces/Synergy/CLAUDE.md           # the container CLAUDE.md, not the repo one
 '
 ```
 

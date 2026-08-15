@@ -61,8 +61,8 @@ RUN echo "${USERNAME} ALL=(root) NOPASSWD: /usr/sbin/iptables, /usr/sbin/ipset, 
     && chmod 0440 /etc/sudoers.d/${USERNAME}
 
 # Directories for mounts
-RUN mkdir -p /workspace /workspace/esper /sources \
-    && chown -R ${HOST_UID}:${HOST_GID} /workspace
+RUN mkdir -p /workspaces/Synergy /workspaces/Synergy/esper /sources \
+    && chown -R ${HOST_UID}:${HOST_GID} /workspaces
 
 # Zsh config — vi mode, colors, prompt
 RUN cat > /home/${USERNAME}/.zshrc <<'ZSHEOF'
@@ -103,11 +103,11 @@ COPY --chown=${HOST_UID}:${HOST_GID} entrypoint.sh /home/${USERNAME}/entrypoint.
 RUN chmod +x /home/${USERNAME}/entrypoint.sh
 
 # Git trust
-RUN git config --global --add safe.directory /workspace
+RUN git config --global --add safe.directory /workspaces/Synergy
 
 # Run as claude user (no user switching needed = no signal problems)
 USER ${USERNAME}
-WORKDIR /workspace
+WORKDIR /workspaces/Synergy
 
 ENTRYPOINT ["/home/claude/entrypoint.sh"]
 CMD []

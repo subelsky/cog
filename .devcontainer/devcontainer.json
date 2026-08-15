@@ -23,21 +23,26 @@
   // --------------------------------------------------------------------------
   // The default devcontainer behaviour is to bind-mount the whole workspace
   // folder. That would re-introduce memory/ and defeat the design, so the
-  // workspace mount is overridden to esper/ alone. /workspace itself comes from
-  // the image (container layer, ephemeral, host-invisible) and everything the
-  // container may see from the host is listed explicitly.
-  "workspaceMount": "source=${localWorkspaceFolder}/esper,target=/workspace/esper,type=bind,consistency=cached",
-  "workspaceFolder": "/workspace",
+  // workspace mount is overridden to esper/ alone. /workspaces/Synergy itself
+  // comes from the image (container layer, ephemeral, host-invisible) and
+  // everything the container may see from the host is listed explicitly.
+  //
+  // The path is /workspaces/Synergy — matching the devcontainer /workspaces/<repo>
+  // convention the personal and work supercontainers use — so a shell lands
+  // somewhere predictable. It is NOT the repo root: only the three mounts below
+  // are present under it.
+  "workspaceMount": "source=${localWorkspaceFolder}/esper,target=/workspaces/Synergy/esper,type=bind,consistency=cached",
+  "workspaceFolder": "/workspaces/Synergy",
 
   "mounts": [
     // Skill definitions, including /integrate. Read-only: a prompt injection in
     // a source file must not be able to rewrite the skill that reads it.
-    "source=${localWorkspaceFolder}/.claude/commands,target=/workspace/.claude/commands,type=bind,readonly",
+    "source=${localWorkspaceFolder}/.claude/commands,target=/workspaces/Synergy/.claude/commands,type=bind,readonly",
 
     // The container's own CLAUDE.md, mounted over the project root's. The repo's
     // CLAUDE.md is never mounted — it tells the assistant to read memory/, which
     // does not exist here.
-    "source=${localWorkspaceFolder}/.devcontainer/CLAUDE.md,target=/workspace/CLAUDE.md,type=bind,readonly",
+    "source=${localWorkspaceFolder}/.devcontainer/CLAUDE.md,target=/workspaces/Synergy/CLAUDE.md,type=bind,readonly",
 
     // Isolated Claude config dir (CLAUDE_CONFIG_DIR) — NOT the host's ~/.claude.
     // Named volume so credentials survive a rebuild; blow it away with
@@ -68,7 +73,7 @@
 
     // If the cog re-baseline moves skills from .claude/commands to .claude/skills,
     // add this mount (and keep or drop the commands one to match the repo):
-    // ,"source=${localWorkspaceFolder}/.claude/skills,target=/workspace/.claude/skills,type=bind,readonly"
+    // ,"source=${localWorkspaceFolder}/.claude/skills,target=/workspaces/Synergy/.claude/skills,type=bind,readonly"
   ],
 
   // --------------------------------------------------------------------------
@@ -99,7 +104,11 @@
   // --------------------------------------------------------------------------
   // NET_ADMIN/NET_RAW are what let init-firewall.sh install its own rules inside
   // this container's network namespace. They confer no privilege on the host.
-  "runArgs": ["--cap-add=NET_ADMIN", "--cap-add=NET_RAW"],
+  // --name gives the container a stable, predictable handle, the same way the
+  // personal and work supercontainers get one, so `docker exec -it synergy-raw`
+  // works without looking up a random Docker name. Rebuild with
+  // `devcontainer up --workspace-folder . --remove-existing-container`.
+  "runArgs": ["--name", "synergy-raw", "--cap-add=NET_ADMIN", "--cap-add=NET_RAW"],
 
   // Runs on every start, as vscode, via the single sudoers entry in the
   // Dockerfile. Fails closed: a non-zero exit here means egress is fully denied

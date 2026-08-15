@@ -24,14 +24,18 @@ The only skill to run here is **`/integrate`** (`.claude/commands/integrate.md`)
 
 | | |
 |---|---|
-| Project root | `/workspace` |
-| Writable | `/workspace/esper` only — this is a real bind mount to the host repo |
-| Read-only | `/workspace/.claude/commands`, `/workspace/CLAUDE.md`, `/sources/*` |
-| Ephemeral | everything else under `/workspace` (container layer, discarded on rebuild) |
+| Project root | `/workspaces/Synergy` |
+| Writable | `/workspaces/Synergy/esper` only — this is a real bind mount to the host repo |
+| Read-only | `/workspaces/Synergy/.claude/commands`, `/workspaces/Synergy/CLAUDE.md`, `/sources/*` |
+| Ephemeral | everything else under `/workspaces/Synergy` (container layer, discarded on rebuild) |
 | `SYNERGY_RAW` | `1` — this is what the `/integrate` gate checks |
 | Network | default-deny; only the Anthropic API and the npm registry resolve |
 
-Anything you write outside `/workspace/esper` is thrown away when the container
+`/workspaces/Synergy` uses the name of the host repo but is **not** the repo. It
+holds only the three mounts in the table above; the rest of the repo — `memory/`
+above all — is not there and is not missing by accident.
+
+Anything you write outside `/workspaces/Synergy/esper` is thrown away when the container
 is rebuilt. That is not a place to stash work.
 
 ## Untrusted content — the rule that matters

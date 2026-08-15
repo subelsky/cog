@@ -3,7 +3,7 @@
 # start.sh - Run Claude Code in the Esper ingestion sandbox
 #
 # Launches an Apple Container VM with:
-#   - Synergy repo mounted read-only at /workspace
+#   - Synergy repo mounted read-only at /workspaces/Synergy
 #   - esper/ overlaid read-write (the only writable project path)
 #   - Source directories mounted read-only at /sources/
 #   - Isolated Claude home (clean_room/claude-home/) — NOT the host's ~/.claude
@@ -14,7 +14,7 @@
 # Isolation note: This container has zero writable access to the host user's
 # Claude config, skills, hooks, agents, transcripts, or npm cache. Anything
 # Claude does inside here is sandboxed to clean_room/claude-home/ and esper/.
-# Project-local commands (/workspace/.claude/commands/) remain available
+# Project-local commands (/workspaces/Synergy/.claude/commands/) remain available
 # via the read-only workspace mount.
 #
 # Usage:
@@ -119,11 +119,11 @@ build_args() {
 
     # Synergy repo root — READ-ONLY
     # This gives Claude access to CLAUDE.md, .claude/commands/, memory/
-    MOUNT_ARGS+=(--mount "type=bind,src=$SYNERGY_DIR,dst=/workspace,readonly")
+    MOUNT_ARGS+=(--mount "type=bind,src=$SYNERGY_DIR,dst=/workspaces/Synergy,readonly")
 
     # Esper directory — READ-WRITE (overlaid on top of read-only workspace)
     # This is the ONLY writable project path. /integrate writes here.
-    MOUNT_ARGS+=(--mount "type=bind,src=$SYNERGY_DIR/esper,dst=/workspace/esper")
+    MOUNT_ARGS+=(--mount "type=bind,src=$SYNERGY_DIR/esper,dst=/workspaces/Synergy/esper")
 
     # Isolated Claude home — NOT the host's ~/.claude.
     # This keeps the container's credentials, settings, skills, hooks, agents,

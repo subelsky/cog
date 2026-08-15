@@ -65,16 +65,16 @@ RUN rm -f /etc/sudoers.d/${USERNAME} /etc/sudoers.d/vscode /etc/sudoers.d/node \
     && visudo -c > /dev/null
 
 # --- Mount points ----------------------------------------------------------
-# /workspace           : project root (container layer, ephemeral)
-# /workspace/esper     : bind-mounted read-write from the host repo
-# /workspace/.claude/commands : bind-mounted read-only from the host repo
-# /sources             : read-only source mounts (see devcontainer.json)
-# There is deliberately no /workspace/memory. See ../docs/ and README.md.
-# /workspace/CLAUDE.md is created empty so the single-file bind mount always has
-# a target; some runtimes refuse to create one.
-RUN mkdir -p /workspace/esper /workspace/.claude/commands /sources \
-    && touch /workspace/CLAUDE.md \
-    && chown -R ${USERNAME}:${USERNAME} /workspace \
+# /workspaces/Synergy           : project root (container layer, ephemeral)
+# /workspaces/Synergy/esper     : bind-mounted read-write from the host repo
+# /workspaces/Synergy/.claude/commands : bind-mounted read-only from the host repo
+# /sources                      : read-only source mounts (see devcontainer.json)
+# There is deliberately no /workspaces/Synergy/memory. See ../docs/ and README.md.
+# /workspaces/Synergy/CLAUDE.md is created empty so the single-file bind mount
+# always has a target; some runtimes refuse to create one.
+RUN mkdir -p /workspaces/Synergy/esper /workspaces/Synergy/.claude/commands /sources \
+    && touch /workspaces/Synergy/CLAUDE.md \
+    && chown -R ${USERNAME}:${USERNAME} /workspaces \
     && chmod 0755 /sources
 
 # --- Isolated Claude + npm state -------------------------------------------
@@ -106,7 +106,9 @@ RUN npm install -g @anthropic-ai/claude-code \
     && npm cache clean --force
 
 # esper/ is its own git repo and arrives as a bind mount; ownership may not match.
-RUN git config --global --add safe.directory /workspace/esper
+RUN git config --global --add safe.directory /workspaces/Synergy/esper
 
 USER root
-WORKDIR /workspace
+# Matches workspaceFolder in devcontainer.json, so a bare `docker exec` lands in
+# the same place the devcontainer CLI does.
+WORKDIR /workspaces/Synergy

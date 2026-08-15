@@ -53,14 +53,14 @@ All sources are mounted read-only. See the file for examples.
 
 | Host Path | Container Path | Access |
 |-----------|---------------|--------|
-| `../` (Synergy root) | `/workspace` | Read-only |
-| `../esper/` | `/workspace/esper` | **Read-write** |
+| `../` (Synergy root) | `/workspaces/Synergy` | Read-only |
+| `../esper/` | `/workspaces/Synergy/esper` | **Read-write** |
 | `./claude-home/` (isolated) | `/home/claude/.claude` | Read-write |
 | `./npm-cache/` (isolated) | `/home/claude/.npm` | Read-write |
 | `~/.gitconfig` | `/home/claude/.gitconfig` | Read-only (baked at build) |
 | Sources from `sources.conf` | `/sources/*` | Read-only |
 
-Project-local commands (`.claude/commands/`, including `/integrate`) live inside the Synergy repo and are reachable read-only via the `/workspace` mount — no separate mount needed.
+Project-local commands (`.claude/commands/`, including `/integrate`) live inside the Synergy repo and are reachable read-only via the `/workspaces/Synergy` mount — no separate mount needed.
 
 ## Transcripts
 
